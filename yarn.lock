@@ -1074,6 +1074,11 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     "to-fast-properties" "^2.0.0"
 
+"@babylonjs/assets@^5.20.0":
+  "integrity" "sha512-a6Mm519h9XtXg8Of0qC+DmwWp+jcolZv+Z/LSG+b/8Fh7kS3gFjHXctKSrln2zMiTxcbYfeBqtOUpGtlV8F2bA=="
+  "resolved" "https://registry.npmjs.org/@babylonjs/assets/-/assets-5.20.0.tgz"
+  "version" "5.20.0"
+
 "@babylonjs/core@^5.37.0":
   "integrity" "sha512-fgURAkt7isU4x29CmcGNONBRp2FZu2tGBcdXmEzbcNjKPO7kP5f/23ZaLHiXSKubi0MLCiLlfGRjRkQvWR7e3g=="
   "resolved" "https://registry.npmjs.org/@babylonjs/core/-/core-5.37.0.tgz"
@@ -2814,6 +2819,26 @@
     "@babel/runtime" "^7.16.3"
     "babel-plugin-macros" "^3.1.0"
     "babel-plugin-transform-react-remove-prop-types" "^0.4.24"
+
+"babylonjs-gltf2interface@^5.37.0":
+  "integrity" "sha512-EjFclIN03h14jeditZHGl4Pyqw4lfHZThJhgVG9xBPOsvbkffuDB1aApsSamhG1Iob0Qv562nrkTnyEq29LgMQ=="
+  "resolved" "https://registry.npmjs.org/babylonjs-gltf2interface/-/babylonjs-gltf2interface-5.37.0.tgz"
+  "version" "5.37.0"
+
+"babylonjs-loaders@^5.37.0":
+  "integrity" "sha512-PiSZWan8dYYR6TJGoNz1xi/9MAegg0wnfXgY8Yld1tcmQqoOa143QaQjQ68z9Q20jgBg0LynRbvG+bI/ZXA50g=="
+  "resolved" "https://registry.npmjs.org/babylonjs-loaders/-/babylonjs-loaders-5.37.0.tgz"
+  "version" "5.37.0"
+  dependencies:
+    "babylonjs" "^5.37.0"
+    "babylonjs-gltf2interface" "^5.37.0"
+
+"babylonjs-materials@^5.37.0":
+  "integrity" "sha512-EG4MiRoIiCxa3Y0cJU6j+kVpJdSUvrtXFRHCBaCW8GlSlKbsnNQUPQmm/70ff8hudwXeUR2l632c8bVVxeq8TA=="
+  "resolved" "https://registry.npmjs.org/babylonjs-materials/-/babylonjs-materials-5.37.0.tgz"
+  "version" "5.37.0"
+  dependencies:
+    "babylonjs" "^5.37.0"
 
 "babylonjs@^5.37.0":
   "integrity" "sha512-V0fAFxI+pd6Tbm+Q5YF2HOMbDElDD38e4dkXRK830LBqdkuwjDgn6GJA0A0MnQQez3mugleMulrKAJBFWx11yg=="
