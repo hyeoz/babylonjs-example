@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  AbstractMesh,
   ActionManager,
   Animation,
   AnimationGroup,
@@ -11,31 +12,40 @@ import {
   HemisphericLight,
   MeshBuilder,
   Scene,
+  SceneLoader,
+  SceneLoaderSuccessCallback,
   StandardMaterial,
   Texture,
   Tools,
   UniversalCamera,
+  Vector2,
   Vector3,
 } from "@babylonjs/core";
 import "./App.css";
+import "babylonjs-loaders";
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
   const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
-
-  const [isDoorOpen, setIsDoorOpen] = useState(false);
 
   const createScene = function () {
     const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
 
     // NOTE 카메라 생성. arc rotate camera 는 항상 대상 위치를 회전 중심으로 하여 해당 대상을 중심으로 회전할 수 있는 카메라.
     // name, alpha, beta, radius, target position, scene 을 매개변수로 받음
-    const camera = new UniversalCamera(
-      "universal camera",
-      new Vector3(0, 3, -30),
+    const camera = new ArcRotateCamera(
+      "arc camera",
+      Math.PI / 2,
+      Math.PI / 4,
+      10,
+      new Vector3(20, 20, 20),
       scene
     );
-    camera.attachControl(canvas, true);
+    scene.activeCamera = camera;
+    scene.activeCamera.attachControl(canvas, true);
+    camera.lowerRadiusLimit = 2;
+    camera.upperRadiusLimit = 10;
+    camera.wheelDeltaPercentage = 0.01;
 
     // NOTE 조명 생성
     const light = new HemisphericLight("light", new Vector3(1, 1, 0), scene); // 조명 생성. 반구형 조명으로 name, direction, scene 울 매개변수로 받음
@@ -294,8 +304,26 @@ function App() {
     ]);
 
     // 렌더링 되면 애니메이션 바로 시작
-    scene.beginAnimation(camera, 0, 15 * frameRate, false);
-    scene.beginAnimation(hinge, 0, 15 * frameRate, false);
+    // scene.beginAnimation(camera, 0, 15 * frameRate, false);
+    // scene.beginAnimation(hinge, 0, 15 * frameRate, false);
+
+    // NOTE 캐릭터 생성
+    SceneLoader.ImportMesh(
+      "",
+      "https://assets.babylonjs.com/meshes/",
+      "HVGirl.glb",
+      scene,
+      function (newMeshes: AbstractMesh[]) {
+        console.log("SUCCESS on load character");
+        var hero = newMeshes[0];
+
+        //Scale the model down
+        hero.scaling.scaleInPlace(0.1);
+
+        //Lock camera on the character
+        camera.target = hero.absolutePosition;
+      }
+    );
 
     return scene;
   };
