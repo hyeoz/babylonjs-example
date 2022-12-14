@@ -13,16 +13,15 @@ import {
   MeshBuilder,
   Scene,
   SceneLoader,
-  SceneLoaderSuccessCallback,
   StandardMaterial,
   Texture,
   Tools,
-  UniversalCamera,
-  Vector2,
   Vector3,
 } from "@babylonjs/core";
 import "./App.css";
 import "babylonjs-loaders";
+import "@babylonjs/loaders";
+import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
@@ -35,10 +34,10 @@ function App() {
     // name, alpha, beta, radius, target position, scene 을 매개변수로 받음
     const camera = new ArcRotateCamera(
       "arc camera",
-      Math.PI / 2,
+      -Math.PI / 2,
       Math.PI / 4,
       10,
-      new Vector3(20, 20, 20),
+      new Vector3(0, 20, -20),
       scene
     );
     scene.activeCamera = camera;
@@ -307,23 +306,160 @@ function App() {
     // scene.beginAnimation(camera, 0, 15 * frameRate, false);
     // scene.beginAnimation(hinge, 0, 15 * frameRate, false);
 
-    // NOTE 캐릭터 생성
+    // NOTE 캐릭터 렌더링
     SceneLoader.ImportMesh(
       "",
-      "https://assets.babylonjs.com/meshes/",
+      "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
       "HVGirl.glb",
       scene,
-      function (newMeshes: AbstractMesh[]) {
-        console.log("SUCCESS on load character");
-        var hero = newMeshes[0];
+      function (newMeshes) {
+        const character = newMeshes[0];
 
-        //Scale the model down
-        hero.scaling.scaleInPlace(0.1);
+        //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
-        //Lock camera on the character
-        camera.target = hero.absolutePosition;
+        // 캐릭터 크기, 위치 등 조절
+        character.scaling.scaleInPlace(0.1);
+        character.position.z = -5;
+        character.rotation.y = Math.PI / 2;
+
+        //   Lock camera on the character
+        (scene.activeCamera as ArcRotateCamera).target =
+          character.absolutePosition;
+
+        // NOTE 이벤트
+        var inputMap: { [key: string]: boolean } = {};
+        scene.actionManager = new ActionManager(scene);
+        scene.actionManager.registerAction(
+          new ExecuteCodeAction(ActionManager.OnKeyDownTrigger, (event) => {
+            inputMap[event.sourceEvent.key] =
+              event.sourceEvent.type == "keydown";
+          })
+        );
+        scene.actionManager.registerAction(
+          new ExecuteCodeAction(ActionManager.OnKeyUpTrigger, (event) => {
+            inputMap[event.sourceEvent.key] =
+              event.sourceEvent.type == "keydown"; // 이 부분을 keyup 으로 맞추면 키를 한 번만 눌러도 같은 액션이 계속 진행됨
+          })
+        );
+
+        // 캐릭터 애니메이션
+        var animating = true;
+
+        const characterSpeed = 0.03;
+        const characterSpeedBack = 0.01;
+        const characterRotationSpeed = 0.1;
+
+        const walkAnimation = scene.getAnimationGroupByName("Walking");
+        const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
+        const idleAnimation = scene.getAnimationGroupByName("Idle");
+        const sambaAnimation = scene.getAnimationGroupByName("Samba");
+
+        // NOTE loop 로 이벤트에 대해 반복적으로 실행됨
+        scene.onBeforeRenderObservable.add(() => {
+          var keydown = false;
+          // 각 키의 움직임에 대한 정의(위치, 회전)
+          if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
+            // shift 함께 누르는 경우 빠르게 이동
+            character.moveWithCollisions(
+              character.forward.scaleInPlace(characterSpeed * 2)
+            );
+            keydown = true;
+          }
+          if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
+            // 일반 직진
+            character.moveWithCollisions(
+              character.forward.scaleInPlace(characterSpeed)
+            );
+            keydown = true;
+          }
+          if (inputMap["s"] || inputMap["ㄴ"]) {
+            character.moveWithCollisions(
+              character.forward.scaleInPlace(-characterSpeedBack)
+            );
+            keydown = true;
+          }
+          if (inputMap["a"] || inputMap["ㅁ"]) {
+            character.rotate(Vector3.Up(), -characterRotationSpeed);
+            keydown = true;
+          }
+          if (inputMap["d"] || inputMap["ㅇ"]) {
+            character.rotate(Vector3.Up(), characterRotationSpeed);
+            keydown = true;
+          }
+          if (inputMap["b"] || inputMap["ㅠ"]) {
+            keydown = true;
+          }
+
+          // 애니메이션에 대한 정의
+          if (keydown) {
+            // 키 눌림 감지된 경우
+            if (!animating) {
+              // 애니메이션 실행되고 있는지 여부 확인
+              animating = true;
+              if (inputMap["s"]) {
+                // 후진
+                walkBackAnimation?.start(
+                  true,
+                  1.0,
+                  walkBackAnimation?.from,
+                  walkBackAnimation?.to,
+                  false
+                );
+              } else if (inputMap["b"]) {
+                // 삼바
+                sambaAnimation?.start(
+                  true,
+                  1.0,
+                  sambaAnimation.from,
+                  sambaAnimation.to,
+                  false
+                );
+              } else {
+                // 직진, 우회전, 좌회전 (같은 애니메이션 사용)
+                walkAnimation?.start(
+                  true,
+                  1.0,
+                  walkAnimation.from,
+                  walkAnimation.to,
+                  false
+                );
+              }
+            }
+          } else {
+            // 키 눌려있지 않은 경우
+            if (animating) {
+              // 애니메이션 실행되고 있는지 여부 확인
+              // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
+              sambaAnimation?.stop();
+              walkAnimation?.stop();
+              walkBackAnimation?.stop();
+
+              // 기본 애니메이션 실행
+              idleAnimation?.start(
+                true,
+                1.0,
+                idleAnimation.from,
+                idleAnimation.to,
+                false
+              );
+
+              animating = false;
+            }
+          }
+        });
       }
     );
+
+    // NOTE GUI 추가
+    const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    const instructions = new TextBlock();
+    instructions.text =
+      "WASD 키로 이동할 수 있고, B 키로 춤을 출 수 있습니다.\n W와 Shift 를 함께 누르면 빠르게 이동이 가능해요. \n 마우스를 움직이면 시점을 변경할 수 있습니다.";
+    instructions.color = "white";
+    instructions.fontSize = 26;
+    instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+    advancedTexture.addControl(instructions);
 
     return scene;
   };

@@ -1089,6 +1089,11 @@
   "resolved" "https://registry.npmjs.org/@babylonjs/gui/-/gui-5.37.0.tgz"
   "version" "5.37.0"
 
+"@babylonjs/loaders@^5.37.0":
+  "integrity" "sha512-byqbfEbpo3deMGv/fCJVF0rGhjWQEp4UWxC/W4En8Kz4EwUp+idm6KU/aym/JXaLUXlJ5bCumoC7J3QCTUeuUg=="
+  "resolved" "https://registry.npmjs.org/@babylonjs/loaders/-/loaders-5.37.0.tgz"
+  "version" "5.37.0"
+
 "@bcoe/v8-coverage@^0.2.3":
   "integrity" "sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw=="
   "resolved" "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
