@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   AbstractMesh,
   ActionManager,
+  AmmoJSPlugin,
   Animation,
   AnimationGroup,
   ArcRotateCamera,
@@ -11,6 +12,7 @@ import {
   ExecuteCodeAction,
   HemisphericLight,
   MeshBuilder,
+  PhysicsImpostor,
   Scene,
   SceneLoader,
   StandardMaterial,
@@ -19,8 +21,8 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import "./App.css";
-import "babylonjs-loaders";
 import "@babylonjs/loaders";
+import "babylonjs-loaders";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 
 function App() {
@@ -307,20 +309,29 @@ function App() {
     // scene.beginAnimation(hinge, 0, 15 * frameRate, false);
 
     // NOTE 캐릭터 렌더링
+
+    // SceneLoader.Append("./", "rumba.glb", scene, function (scene) {
+    //   console.log(",fesfmksmf", scene);
+    // });
+
     SceneLoader.ImportMesh(
       "",
-      "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-      "HVGirl.glb",
+      // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      // "/babylonjs-react/",
+      "rumba.glb",
       scene,
       function (newMeshes) {
         const character = newMeshes[0];
+        console.log(character);
 
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
         // 캐릭터 크기, 위치 등 조절
-        character.scaling.scaleInPlace(0.1);
+        character.scaling.scaleInPlace(3);
         character.position.z = -5;
-        character.rotation.y = Math.PI / 2;
+        // character.position.y = 2;
+        character.rotation.x = Math.PI / 2;
 
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
@@ -460,6 +471,8 @@ function App() {
     instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
     instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     advancedTexture.addControl(instructions);
+
+    // NOTE 물리엔진 적용
 
     return scene;
   };
