@@ -318,12 +318,10 @@ function App() {
       "",
       // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
       "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      // "/babylonjs-react/",
-      "rumba.glb",
+      "MergedMouse.glb",
       scene,
       function (newMeshes) {
         const character = newMeshes[0];
-        console.log(character);
 
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
@@ -331,7 +329,7 @@ function App() {
         character.scaling.scaleInPlace(3);
         character.position.z = -5;
         // character.position.y = 2;
-        character.rotation.x = Math.PI / 2;
+        character.rotation.y = Math.PI / 2;
 
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
@@ -360,10 +358,12 @@ function App() {
         const characterSpeedBack = 0.01;
         const characterRotationSpeed = 0.1;
 
-        const walkAnimation = scene.getAnimationGroupByName("Walking");
-        const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
-        const idleAnimation = scene.getAnimationGroupByName("Idle");
-        const sambaAnimation = scene.getAnimationGroupByName("Samba");
+        // const walkAnimation = scene.getAnimationGroupByName("Walking");
+        // const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
+        // const idleAnimation = scene.getAnimationGroupByName("Idle");
+        // const sambaAnimation = scene.getAnimationGroupByName("Samba");
+        const rumbaAnimation = scene.getAnimationGroupByName("Rumba");
+        const swimmingAnimation = scene.getAnimationGroupByName("Swimming");
 
         // NOTE loop 로 이벤트에 대해 반복적으로 실행됨
         scene.onBeforeRenderObservable.add(() => {
@@ -409,31 +409,31 @@ function App() {
               animating = true;
               if (inputMap["s"]) {
                 // 후진
-                walkBackAnimation?.start(
-                  true,
-                  1.0,
-                  walkBackAnimation?.from,
-                  walkBackAnimation?.to,
-                  false
-                );
+                // walkBackAnimation?.start(
+                //   true,
+                //   1.0,
+                //   walkBackAnimation?.from,
+                //   walkBackAnimation?.to,
+                //   false
+                // );
               } else if (inputMap["b"]) {
                 // 삼바
-                sambaAnimation?.start(
+                rumbaAnimation?.start(
                   true,
                   1.0,
-                  sambaAnimation.from,
-                  sambaAnimation.to,
+                  rumbaAnimation.from,
+                  rumbaAnimation.to,
                   false
                 );
               } else {
                 // 직진, 우회전, 좌회전 (같은 애니메이션 사용)
-                walkAnimation?.start(
-                  true,
-                  1.0,
-                  walkAnimation.from,
-                  walkAnimation.to,
-                  false
-                );
+                // walkAnimation?.start(
+                //   true,
+                //   1.0,
+                //   walkAnimation.from,
+                //   walkAnimation.to,
+                //   false
+                // );
               }
             }
           } else {
@@ -441,16 +441,16 @@ function App() {
             if (animating) {
               // 애니메이션 실행되고 있는지 여부 확인
               // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
-              sambaAnimation?.stop();
-              walkAnimation?.stop();
-              walkBackAnimation?.stop();
+              rumbaAnimation?.stop();
+              // walkAnimation?.stop();
+              // walkBackAnimation?.stop();
 
               // 기본 애니메이션 실행
-              idleAnimation?.start(
+              swimmingAnimation?.start(
                 true,
                 1.0,
-                idleAnimation.from,
-                idleAnimation.to,
+                swimmingAnimation.from,
+                swimmingAnimation.to,
                 false
               );
 
