@@ -6,11 +6,15 @@ import {
   Animation,
   AnimationGroup,
   ArcRotateCamera,
+  CannonJSPlugin,
+  CreateBox,
   CreateCylinder,
   CreateGround,
+  CreateSphere,
   Engine,
   ExecuteCodeAction,
   HemisphericLight,
+  Mesh,
   MeshBuilder,
   PhysicsImpostor,
   Scene,
@@ -24,6 +28,7 @@ import "./App.css";
 import "@babylonjs/loaders";
 import "babylonjs-loaders";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
+import * as CANNON from "cannon";
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
@@ -53,7 +58,11 @@ function App() {
     // light.intensity = 0.7;
 
     // NOTE ground 생성
-    let ground = CreateGround("ground", { width: 30, height: 30 }, scene);
+    let ground = MeshBuilder.CreateGround(
+      "ground",
+      { width: 30, height: 30, subdivisions: 2 },
+      scene
+    );
     let groundMaterial = new StandardMaterial("Ground Material", scene);
     ground.material = groundMaterial;
     const groundTexture = new Texture(
@@ -153,7 +162,7 @@ function App() {
       { width: 2, height: 4, depth: 0.1 },
       scene
     );
-    const hinge = MeshBuilder.CreateBox("hinge", {}, scene); // 문이 열린 뒤 비어있는 문틀
+    const hinge = MeshBuilder.CreateBox("hinge", {}, scene); // 문이 열리기위한 힌지(문이 열리며 접히는 부분. 눈에 보이지 않음)
     hinge.isVisible = false;
     door.parent = hinge;
     hinge.position.y = 2;
@@ -314,22 +323,95 @@ function App() {
     //   console.log(",fesfmksmf", scene);
     // });
 
+    // NOTE 물리엔진 적용 - cannon
+    const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
+    const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
+    scene.enablePhysics(gravityVector, physicsPlugin);
+
+    ground.physicsImpostor = new PhysicsImpostor(
+      ground,
+      PhysicsImpostor.BoxImpostor,
+      { mass: 0, restitution: 0.5 },
+      scene
+    );
+    [wall1, wall2, wall3, wall4, wall5, wall6].forEach((w) => {
+      w.physicsImpostor = new PhysicsImpostor(
+        w,
+        PhysicsImpostor.BoxImpostor,
+        { mass: 0, restitution: 0.1 },
+        scene
+      );
+    });
+    const doorPhysicsRoot = new Mesh("", scene);
+    doorPhysicsRoot.addChild(hinge);
+    doorPhysicsRoot.physicsImpostor = new PhysicsImpostor(
+      doorPhysicsRoot,
+      PhysicsImpostor.BoxImpostor,
+      { mass: 0, restitution: 0.1 },
+      scene
+    );
+
     SceneLoader.ImportMesh(
       "",
       // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
       "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
       "MergedMouse.glb",
       scene,
-      function (newMeshes) {
+      (newMeshes) => {
         const character = newMeshes[0];
 
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
         // 캐릭터 크기, 위치 등 조절
         character.scaling.scaleInPlace(3);
-        character.position.z = -5;
-        // character.position.y = 2;
+        // character.position.z = -5;
+        character.position.y = -0.3;
         character.rotation.y = Math.PI / 2;
+
+        character.setParent(null);
+        // const physicRoot = new Mesh("", scene);
+        // physicRoot.addChild(character);
+
+        // Add colliders
+        var collidersVisible = true;
+        // var sphereCollider = CreateSphere(
+        //   "sphere1",
+        //   { segments: 16, diameter: 0.3 },
+        //   scene
+        // );
+        // sphereCollider.position.y = 0.15;
+        // sphereCollider.isVisible = collidersVisible;
+
+        var boxCollider = CreateBox("box1", { size: 0.3 }, scene);
+        boxCollider.position.y = -0.15;
+        // boxCollider.position.z = -0.11;
+        boxCollider.isVisible = collidersVisible;
+
+        var physicsRoot = new Mesh("", scene);
+        physicsRoot.addChild(newMeshes[0]);
+        physicsRoot.addChild(boxCollider);
+        // physicsRoot.addChild(sphereCollider);
+        physicsRoot.position.z = -5;
+        physicsRoot.position.y += 3;
+
+        boxCollider.physicsImpostor = new PhysicsImpostor(
+          boxCollider,
+          PhysicsImpostor.BoxImpostor,
+          { mass: 0 },
+          scene
+        );
+        // sphereCollider.physicsImpostor = new PhysicsImpostor(
+        //   sphereCollider,
+        //   PhysicsImpostor.SphereImpostor,
+        //   { mass: 0 },
+        //   scene
+        // );
+        physicsRoot.physicsImpostor = new PhysicsImpostor(
+          physicsRoot,
+          PhysicsImpostor.NoImpostor,
+          { mass: 1 },
+          scene
+        );
 
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
@@ -362,42 +444,49 @@ function App() {
         // const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
         // const idleAnimation = scene.getAnimationGroupByName("Idle");
         // const sambaAnimation = scene.getAnimationGroupByName("Samba");
+        const idleAnimation = scene.getAnimationGroupByName("Idle");
         const rumbaAnimation = scene.getAnimationGroupByName("Rumba");
         const swimmingAnimation = scene.getAnimationGroupByName("Swimming");
 
         // NOTE loop 로 이벤트에 대해 반복적으로 실행됨
         scene.onBeforeRenderObservable.add(() => {
           var keydown = false;
+          // console.log(inputMap);
+
           // 각 키의 움직임에 대한 정의(위치, 회전)
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
-            character.moveWithCollisions(
-              character.forward.scaleInPlace(characterSpeed * 2)
+            physicsRoot.moveWithCollisions(
+              physicsRoot.forward.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
-            character.moveWithCollisions(
-              character.forward.scaleInPlace(characterSpeed)
+            physicsRoot.moveWithCollisions(
+              physicsRoot.forward.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
-            character.moveWithCollisions(
-              character.forward.scaleInPlace(-characterSpeedBack)
+            physicsRoot.moveWithCollisions(
+              physicsRoot.forward.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            character.rotate(Vector3.Up(), -characterRotationSpeed);
+            physicsRoot.rotate(Vector3.Up(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            character.rotate(Vector3.Up(), characterRotationSpeed);
+            physicsRoot.rotate(Vector3.Up(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
+            keydown = true;
+          }
+          if (inputMap["q"]) {
+            physicsRoot.rotation.y = Math.PI;
             keydown = true;
           }
 
@@ -407,7 +496,7 @@ function App() {
             if (!animating) {
               // 애니메이션 실행되고 있는지 여부 확인
               animating = true;
-              if (inputMap["s"]) {
+              if (inputMap["w"]) {
                 // 후진
                 // walkBackAnimation?.start(
                 //   true,
@@ -416,6 +505,13 @@ function App() {
                 //   walkBackAnimation?.to,
                 //   false
                 // );
+                swimmingAnimation?.start(
+                  true,
+                  1.0,
+                  swimmingAnimation.from,
+                  swimmingAnimation.to,
+                  false
+                );
               } else if (inputMap["b"]) {
                 // 삼바
                 rumbaAnimation?.start(
@@ -442,15 +538,16 @@ function App() {
               // 애니메이션 실행되고 있는지 여부 확인
               // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
               rumbaAnimation?.stop();
+              swimmingAnimation?.stop();
               // walkAnimation?.stop();
               // walkBackAnimation?.stop();
 
               // 기본 애니메이션 실행
-              swimmingAnimation?.start(
+              idleAnimation?.start(
                 true,
                 1.0,
-                swimmingAnimation.from,
-                swimmingAnimation.to,
+                idleAnimation.from,
+                idleAnimation.to,
                 false
               );
 
@@ -458,6 +555,15 @@ function App() {
             }
           }
         });
+
+        // const box = MeshBuilder.CreateBox("box", { size: 2 });
+        // box.position = new Vector3(0, 10, 0);
+        // box.physicsImpostor = new PhysicsImpostor(
+        //   box,
+        //   PhysicsImpostor.BoxImpostor,
+        //   { mass: 1, restitution: 0.5 },
+        //   scene
+        // );
       }
     );
 
@@ -471,8 +577,6 @@ function App() {
     instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
     instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     advancedTexture.addControl(instructions);
-
-    // NOTE 물리엔진 적용
 
     return scene;
   };
