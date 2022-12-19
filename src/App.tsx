@@ -353,12 +353,12 @@ function App() {
 
     SceneLoader.ImportMesh(
       "",
-      // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      "MergedMouse.glb",
+      "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+      // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      "skull.babylon",
       scene,
       (newMeshes) => {
-        const character = newMeshes[0];
+        let character = newMeshes[0];
 
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
@@ -372,8 +372,8 @@ function App() {
         // const physicRoot = new Mesh("", scene);
         // physicRoot.addChild(character);
 
-        // Add colliders
-        var collidersVisible = true;
+        // // Add colliders
+        // var collidersVisible = true;
         // var sphereCollider = CreateSphere(
         //   "sphere1",
         //   { segments: 16, diameter: 0.3 },
@@ -382,35 +382,47 @@ function App() {
         // sphereCollider.position.y = 0.15;
         // sphereCollider.isVisible = collidersVisible;
 
-        var boxCollider = CreateBox("box1", { size: 0.3 }, scene);
-        boxCollider.position.y = -0.15;
+        // var boxCollider = CreateBox("box1", { size: 0.3 }, scene);
+        // boxCollider.position.y = -0.15;
         // boxCollider.position.z = -0.11;
-        boxCollider.isVisible = collidersVisible;
+        // boxCollider.isVisible = collidersVisible;
 
-        var physicsRoot = new Mesh("", scene);
-        physicsRoot.addChild(newMeshes[0]);
-        physicsRoot.addChild(boxCollider);
+        // var physicsRoot = new Mesh("", scene);
+        // physicsRoot.addChild(newMeshes[0]);
+        // physicsRoot.addChild(boxCollider);
         // physicsRoot.addChild(sphereCollider);
-        physicsRoot.position.z = -5;
-        physicsRoot.position.y += 3;
+        // physicsRoot.position.z = -5;
+        // physicsRoot.position.y += 3;
 
-        boxCollider.physicsImpostor = new PhysicsImpostor(
-          boxCollider,
-          PhysicsImpostor.BoxImpostor,
-          { mass: 0 },
-          scene
-        );
+        // boxCollider.physicsImpostor = new PhysicsImpostor(
+        //   boxCollider,
+        //   PhysicsImpostor.BoxImpostor,
+        //   { mass: 0 },
+        //   scene
+        // );
         // sphereCollider.physicsImpostor = new PhysicsImpostor(
         //   sphereCollider,
         //   PhysicsImpostor.SphereImpostor,
         //   { mass: 0 },
         //   scene
         // );
-        physicsRoot.physicsImpostor = new PhysicsImpostor(
-          physicsRoot,
-          PhysicsImpostor.NoImpostor,
-          { mass: 1 },
-          scene
+        // physicsRoot.physicsImpostor = new PhysicsImpostor(
+        //   physicsRoot,
+        //   PhysicsImpostor.NoImpostor,
+        //   { mass: 1 },
+        //   scene
+        // );
+
+        // character.parent = null;
+
+        character.scaling = new Vector3(0.01, 0.01, 0.01);
+        character.position.z = -10;
+        character.position.y = 3;
+
+        character.physicsImpostor = new PhysicsImpostor(
+          character,
+          PhysicsImpostor.SphereImpostor,
+          { mass: 1, restitution: 0.1 }
         );
 
         //   Lock camera on the character
@@ -456,37 +468,37 @@ function App() {
           // 각 키의 움직임에 대한 정의(위치, 회전)
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
-            physicsRoot.moveWithCollisions(
-              physicsRoot.forward.scaleInPlace(characterSpeed * 2)
+            character.moveWithCollisions(
+              character.forward.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
-            physicsRoot.moveWithCollisions(
-              physicsRoot.forward.scaleInPlace(characterSpeed)
+            character.moveWithCollisions(
+              character.forward.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
-            physicsRoot.moveWithCollisions(
-              physicsRoot.forward.scaleInPlace(-characterSpeedBack)
+            character.moveWithCollisions(
+              character.forward.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            physicsRoot.rotate(Vector3.Up(), -characterRotationSpeed);
+            character.rotate(Vector3.Up(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            physicsRoot.rotate(Vector3.Up(), characterRotationSpeed);
+            character.rotate(Vector3.Up(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
             keydown = true;
           }
           if (inputMap["q"]) {
-            physicsRoot.rotation.y = Math.PI;
+            character.rotation.y = Math.PI;
             keydown = true;
           }
 

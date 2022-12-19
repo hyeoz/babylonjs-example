@@ -16,6 +16,7 @@
     "@types/node": "^16.18.8",
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.9",
+    "ammojs-typed": "^1.0.6",
     "babylonjs": "^5.37.0",
     "babylonjs-loaders": "^5.37.0",
     "babylonjs-materials": "^5.37.0",
