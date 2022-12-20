@@ -23,6 +23,7 @@ import {
   Texture,
   Tools,
   Vector3,
+  VertexBuffer,
 } from "@babylonjs/core";
 import "./App.css";
 import "@babylonjs/loaders";
@@ -342,10 +343,10 @@ function App() {
         scene
       );
     });
-    const doorPhysicsRoot = new Mesh("", scene);
-    doorPhysicsRoot.addChild(hinge);
-    doorPhysicsRoot.physicsImpostor = new PhysicsImpostor(
-      doorPhysicsRoot,
+    // const doorPhysicsRoot = new Mesh("", scene);
+    // doorPhysicsRoot.addChild(hinge);
+    door.physicsImpostor = new PhysicsImpostor(
+      door,
       PhysicsImpostor.BoxImpostor,
       { mass: 0, restitution: 0.1 },
       scene
@@ -353,9 +354,12 @@ function App() {
 
     SceneLoader.ImportMesh(
       "",
-      "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+      // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+      "https://raw.githubusercontent.com/TrevorDev/gltfModels/master/",
       // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      "skull.babylon",
+      // "skull.babylon",
+      "weirdShape.glb",
+      // "MergedMouse.glb",
       scene,
       (newMeshes) => {
         let character = newMeshes[0];
@@ -363,12 +367,12 @@ function App() {
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
         // 캐릭터 크기, 위치 등 조절
-        character.scaling.scaleInPlace(3);
+        // character.scaling.scaleInPlace(3);
         // character.position.z = -5;
-        character.position.y = -0.3;
-        character.rotation.y = Math.PI / 2;
+        // character.position.y = -0.3;
+        // character.rotation.y = Math.PI / 2;
 
-        character.setParent(null);
+        // character.setParent(null);
         // const physicRoot = new Mesh("", scene);
         // physicRoot.addChild(character);
 
@@ -415,16 +419,29 @@ function App() {
 
         // character.parent = null;
 
-        character.scaling = new Vector3(0.01, 0.01, 0.01);
-        character.position.z = -10;
-        character.position.y = 3;
+        // character.scaling = new Vector3(0.01, 0.01, 0.01);
+        // character.position.z = -10;
+        // character.position.y = 3;
 
-        character.physicsImpostor = new PhysicsImpostor(
-          character,
-          PhysicsImpostor.SphereImpostor,
-          { mass: 1, restitution: 0.1 }
-        );
+        // character.getChildMeshes().forEach((mesh) => {
+        //   mesh.physicsImpostor = new PhysicsImpostor(
+        //     character,
+        //     PhysicsImpostor.BoxImpostor,
+        //     { mass: 2 },
+        //     scene
+        //   );
+        // });
 
+        // character.physicsImpostor = new PhysicsImpostor(
+        //   character,
+        //   PhysicsImpostor.NoImpostor,
+        //   { mass: 2, restitution: 0.1 }
+        // );
+
+        // const characters = character;
+        const characters = makePhysics(newMeshes, scene, 1);
+        characters.position.y += 5;
+        characters.position.z = -5;
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
           character.absolutePosition;
@@ -468,37 +485,37 @@ function App() {
           // 각 키의 움직임에 대한 정의(위치, 회전)
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
-            character.moveWithCollisions(
-              character.forward.scaleInPlace(characterSpeed * 2)
+            characters.moveWithCollisions(
+              characters.forward.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
-            character.moveWithCollisions(
-              character.forward.scaleInPlace(characterSpeed)
+            characters.moveWithCollisions(
+              characters.forward.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
-            character.moveWithCollisions(
-              character.forward.scaleInPlace(-characterSpeedBack)
+            characters.moveWithCollisions(
+              characters.forward.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            character.rotate(Vector3.Up(), -characterRotationSpeed);
+            characters.rotate(Vector3.Up(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            character.rotate(Vector3.Up(), characterRotationSpeed);
+            characters.rotate(Vector3.Up(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
             keydown = true;
           }
           if (inputMap["q"]) {
-            character.rotation.y = Math.PI;
+            characters.rotation.y = Math.PI;
             keydown = true;
           }
 
@@ -616,5 +633,54 @@ function App() {
 
   return <div className="App"></div>;
 }
+
+const makePhysics = (
+  newMeshes: AbstractMesh[],
+  scene: Scene,
+  scaling: number
+) => {
+  const physicsRoot = new Mesh("physicsRoot", scene);
+
+  // mesh 중 box 인 오브젝트(collider)에 대해 invisible 처리하고 root 에 추가
+  newMeshes.forEach((m, i) => {
+    if (m.name.indexOf("box") !== -1) {
+      m.isVisible = false;
+      physicsRoot.addChild(m);
+    }
+  });
+  // 부모가 없는 메쉬 root 에 추가
+  newMeshes.forEach((m, i) => {
+    if (m.parent == null) {
+      physicsRoot.addChild(m);
+    }
+  });
+  // box 에 물리엔진 적용
+  physicsRoot.getChildMeshes().forEach((m) => {
+    console.log(m);
+
+    if (m.name.indexOf("box") !== -1) {
+      m.scaling.x = Math.abs(m.scaling.x);
+      m.scaling.y = Math.abs(m.scaling.y);
+      m.scaling.z = Math.abs(m.scaling.z);
+      m.physicsImpostor = new PhysicsImpostor(
+        m,
+        PhysicsImpostor.BoxImpostor,
+        { mass: 0.1 },
+        scene
+      );
+    }
+  });
+  physicsRoot.scaling.scaleInPlace(scaling);
+  physicsRoot.physicsImpostor = new PhysicsImpostor(
+    physicsRoot,
+    PhysicsImpostor.NoImpostor,
+    { mass: 3 },
+    scene
+  );
+
+  console.log(physicsRoot.collider);
+
+  return physicsRoot;
+};
 
 export default App;
