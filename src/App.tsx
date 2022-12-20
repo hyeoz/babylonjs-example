@@ -355,11 +355,11 @@ function App() {
     SceneLoader.ImportMesh(
       "",
       // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-      "https://raw.githubusercontent.com/TrevorDev/gltfModels/master/",
-      // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      // "https://raw.githubusercontent.com/TrevorDev/gltfModels/master/",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
       // "skull.babylon",
-      "weirdShape.glb",
-      // "MergedMouse.glb",
+      // "weirdShape.glb",
+      "MergedMouse.glb",
       scene,
       (newMeshes) => {
         let character = newMeshes[0];
@@ -369,82 +369,20 @@ function App() {
         // 캐릭터 크기, 위치 등 조절
         // character.scaling.scaleInPlace(3);
         // character.position.z = -5;
-        // character.position.y = -0.3;
+        character.position.y = 1;
         // character.rotation.y = Math.PI / 2;
 
-        // character.setParent(null);
-        // const physicRoot = new Mesh("", scene);
-        // physicRoot.addChild(character);
-
-        // // Add colliders
-        // var collidersVisible = true;
-        // var sphereCollider = CreateSphere(
-        //   "sphere1",
-        //   { segments: 16, diameter: 0.3 },
-        //   scene
-        // );
-        // sphereCollider.position.y = 0.15;
-        // sphereCollider.isVisible = collidersVisible;
-
-        // var boxCollider = CreateBox("box1", { size: 0.3 }, scene);
-        // boxCollider.position.y = -0.15;
-        // boxCollider.position.z = -0.11;
-        // boxCollider.isVisible = collidersVisible;
-
-        // var physicsRoot = new Mesh("", scene);
-        // physicsRoot.addChild(newMeshes[0]);
-        // physicsRoot.addChild(boxCollider);
-        // physicsRoot.addChild(sphereCollider);
-        // physicsRoot.position.z = -5;
-        // physicsRoot.position.y += 3;
-
-        // boxCollider.physicsImpostor = new PhysicsImpostor(
-        //   boxCollider,
-        //   PhysicsImpostor.BoxImpostor,
-        //   { mass: 0 },
-        //   scene
-        // );
-        // sphereCollider.physicsImpostor = new PhysicsImpostor(
-        //   sphereCollider,
-        //   PhysicsImpostor.SphereImpostor,
-        //   { mass: 0 },
-        //   scene
-        // );
-        // physicsRoot.physicsImpostor = new PhysicsImpostor(
-        //   physicsRoot,
-        //   PhysicsImpostor.NoImpostor,
-        //   { mass: 1 },
-        //   scene
-        // );
-
-        // character.parent = null;
-
-        // character.scaling = new Vector3(0.01, 0.01, 0.01);
-        // character.position.z = -10;
-        // character.position.y = 3;
-
-        // character.getChildMeshes().forEach((mesh) => {
-        //   mesh.physicsImpostor = new PhysicsImpostor(
-        //     character,
-        //     PhysicsImpostor.BoxImpostor,
-        //     { mass: 2 },
-        //     scene
-        //   );
-        // });
-
-        // character.physicsImpostor = new PhysicsImpostor(
-        //   character,
-        //   PhysicsImpostor.NoImpostor,
-        //   { mass: 2, restitution: 0.1 }
-        // );
-
         // const characters = character;
-        const characters = makePhysics(newMeshes, scene, 1);
-        characters.position.y += 5;
+        const characters = character.getChildMeshes()[0];
+        characters.setParent(null);
+        character.dispose();
+
+        // const characters = makePhysics(newMeshes, scene, 1);
+        // characters.position.y += 1;
         characters.position.z = -5;
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
-          character.absolutePosition;
+          characters.absolutePosition;
 
         // NOTE 이벤트
         var inputMap: { [key: string]: boolean } = {};
@@ -585,14 +523,12 @@ function App() {
           }
         });
 
-        // const box = MeshBuilder.CreateBox("box", { size: 2 });
-        // box.position = new Vector3(0, 10, 0);
-        // box.physicsImpostor = new PhysicsImpostor(
-        //   box,
-        //   PhysicsImpostor.BoxImpostor,
-        //   { mass: 1, restitution: 0.5 },
-        //   scene
-        // );
+        characters.physicsImpostor = new PhysicsImpostor(
+          characters,
+          PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
+          { mass: 1, restitution: 0.5 },
+          scene
+        );
       }
     );
 
@@ -633,54 +569,5 @@ function App() {
 
   return <div className="App"></div>;
 }
-
-const makePhysics = (
-  newMeshes: AbstractMesh[],
-  scene: Scene,
-  scaling: number
-) => {
-  const physicsRoot = new Mesh("physicsRoot", scene);
-
-  // mesh 중 box 인 오브젝트(collider)에 대해 invisible 처리하고 root 에 추가
-  newMeshes.forEach((m, i) => {
-    if (m.name.indexOf("box") !== -1) {
-      m.isVisible = false;
-      physicsRoot.addChild(m);
-    }
-  });
-  // 부모가 없는 메쉬 root 에 추가
-  newMeshes.forEach((m, i) => {
-    if (m.parent == null) {
-      physicsRoot.addChild(m);
-    }
-  });
-  // box 에 물리엔진 적용
-  physicsRoot.getChildMeshes().forEach((m) => {
-    console.log(m);
-
-    if (m.name.indexOf("box") !== -1) {
-      m.scaling.x = Math.abs(m.scaling.x);
-      m.scaling.y = Math.abs(m.scaling.y);
-      m.scaling.z = Math.abs(m.scaling.z);
-      m.physicsImpostor = new PhysicsImpostor(
-        m,
-        PhysicsImpostor.BoxImpostor,
-        { mass: 0.1 },
-        scene
-      );
-    }
-  });
-  physicsRoot.scaling.scaleInPlace(scaling);
-  physicsRoot.physicsImpostor = new PhysicsImpostor(
-    physicsRoot,
-    PhysicsImpostor.NoImpostor,
-    { mass: 3 },
-    scene
-  );
-
-  console.log(physicsRoot.collider);
-
-  return physicsRoot;
-};
 
 export default App;
