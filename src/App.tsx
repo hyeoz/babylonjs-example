@@ -164,19 +164,6 @@ function App() {
       { width: 2, height: 4, depth: 0.1 },
       scene
     );
-    // NOTE 상호작용을 위한 문 하나 더 생성
-    // 문이 열리는 액션과 캐릭터의 터치를 감지하는 상호작용에 물리엔진을 같이 적용시키면 힌지에만 적용됨..
-    // const doorTouch = MeshBuilder.CreateBox(
-    //   "doorT",
-    //   { width: 2, height: 4 },
-    //   scene
-    // );
-    // doorTouch.position.x = -1;
-    // doorTouch.position.y = 2;
-    // const redMat = new StandardMaterial("red", scene);
-    // redMat.diffuseColor = new Color3(1, 0, 0);
-    // doorTouch.material = redMat;
-    // doorTouch.isVisible = false;
 
     const hinge = MeshBuilder.CreateBox(
       "hinge",
@@ -363,20 +350,11 @@ function App() {
       );
     });
 
-    // const doorRoot = hinge.getChildMeshes()[0];
-    // hinge.setParent(null);
-    // hinge.dispose();
-
     const doorPhysicsRoot = new Mesh("", scene);
-    // const doorDuplicate = new Mesh("dup", scene);
-    // doorDuplicate.addChild(door);
-    // doorDuplicate.setParent(null);
-    // doorPhysicsRoot.addChild(doorTouch);
     doorPhysicsRoot.addChild(hinge);
     doorPhysicsRoot.setParent(null);
     doorPhysicsRoot.physicsImpostor = new PhysicsImpostor(
-      // doorTouch,
-      hinge,
+      door,
       PhysicsImpostor.MeshImpostor,
       { mass: 0, restitution: 0.1 },
       scene
@@ -573,11 +551,6 @@ function App() {
         scene.registerBeforeRender(() => {
           // console.log(door.intersectsMesh(characters));
 
-          // characters.physicsImpostor &&
-          // characters.physicsImpostor?.registerOnPhysicsCollide(
-          //   doorPhysicsRoot.physicsImpostor,
-          //   detectCollisions
-          // );
           if (
             // hinge.rotation.y !== Math.PI / 2 &&
             door.intersectsMesh(characters)
@@ -609,35 +582,6 @@ function App() {
     instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
     instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     advancedTexture.addControl(instructions);
-
-    const detectCollisions = (
-      collider: PhysicsImpostor,
-      against: PhysicsImpostor
-    ) => {
-      console.log("detevtCollision");
-
-      // const redMat = new StandardMaterial("Mat", scene);
-      // redMat.diffuseColor = new Color3(1, 0, 0);
-
-      // collider.object.scaling = new Vector3(3, 3, 3);
-      // collider.setScalingUpdated();
-
-      // (against.object as AbstractMesh).material = redMat;
-      if (hinge.rotation.y !== Math.PI / 2) {
-        scene.stopAllAnimations();
-        scene.beginAnimation(
-          hinge,
-          3 * frameRate,
-          10 * frameRate,
-          false,
-          undefined,
-          () => {
-            // on animate end -> 문 열린채로 고정
-            hinge.rotation.y = Math.PI / 2;
-          }
-        );
-      }
-    };
 
     return scene;
   };
