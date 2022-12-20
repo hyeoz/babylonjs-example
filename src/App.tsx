@@ -348,14 +348,15 @@ function App() {
     // hinge.setParent(null);
     // hinge.dispose();
 
-    // const doorPhysicsRoot = new Mesh("", scene);
-    // doorPhysicsRoot.addChild(hinge);
-    // hinge.physicsImpostor = new PhysicsImpostor(
-    //   hinge,
-    //   PhysicsImpostor.BoxImpostor,
-    //   { mass: 0, restitution: 0.1 },
-    //   scene
-    // );
+    const doorPhysicsRoot = new Mesh("", scene);
+    doorPhysicsRoot.addChild(hinge);
+    doorPhysicsRoot.setParent(null);
+    doorPhysicsRoot.physicsImpostor = new PhysicsImpostor(
+      doorPhysicsRoot,
+      PhysicsImpostor.BoxImpostor,
+      { mass: 0, restitution: 0.1 },
+      scene
+    );
 
     SceneLoader.ImportMesh(
       "",
@@ -374,9 +375,7 @@ function App() {
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
         // 캐릭터 크기, 위치 등 조절
-        character.scaling.scaleInPlace(1);
-        // character.position.z = -5;
-        character.position.y = 3;
+        character.scaling.scaleInPlace(2);
         // character.rotation.y = Math.PI / 2;
 
         // const characters = character;
@@ -386,7 +385,7 @@ function App() {
         character.dispose();
 
         // const characters = makePhysics(newMeshes, scene, 1);
-        // characters.position.y += 1;
+        characters.position.y += 1;
         characters.position.z = -5;
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
@@ -534,7 +533,7 @@ function App() {
 
         characters.physicsImpostor = new PhysicsImpostor(
           characters,
-          PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
+          PhysicsImpostor.SphereImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
           { mass: 1, restitution: 0.5 },
           scene
         );
