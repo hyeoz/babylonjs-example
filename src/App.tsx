@@ -303,7 +303,7 @@ function App() {
       { frame: 3 * frameRate, value: Math.PI / 2 },
     ]);
     const close = new Animation(
-      "open",
+      "close",
       "rotation.y",
       frameRate,
       Animation.ANIMATIONTYPE_FLOAT,
@@ -343,14 +343,19 @@ function App() {
         scene
       );
     });
+
+    // const doorRoot = hinge.getChildMeshes()[0];
+    // hinge.setParent(null);
+    // hinge.dispose();
+
     // const doorPhysicsRoot = new Mesh("", scene);
     // doorPhysicsRoot.addChild(hinge);
-    door.physicsImpostor = new PhysicsImpostor(
-      door,
-      PhysicsImpostor.BoxImpostor,
-      { mass: 0, restitution: 0.1 },
-      scene
-    );
+    // hinge.physicsImpostor = new PhysicsImpostor(
+    //   hinge,
+    //   PhysicsImpostor.BoxImpostor,
+    //   { mass: 0, restitution: 0.1 },
+    //   scene
+    // );
 
     SceneLoader.ImportMesh(
       "",
@@ -362,18 +367,21 @@ function App() {
       "MergedMouse.glb",
       scene,
       (newMeshes) => {
+        console.log(newMeshes);
+
         let character = newMeshes[0];
 
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
         // 캐릭터 크기, 위치 등 조절
-        // character.scaling.scaleInPlace(3);
+        character.scaling.scaleInPlace(1);
         // character.position.z = -5;
-        character.position.y = 1;
+        character.position.y = 3;
         // character.rotation.y = Math.PI / 2;
 
         // const characters = character;
         const characters = character.getChildMeshes()[0];
+
         characters.setParent(null);
         character.dispose();
 
@@ -424,29 +432,30 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(characterSpeed * 2)
+              characters.up.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
+          // NOTE babylonjs 에서는 y 축이 수직, blender 에서는 z 축이 수직이기 때문에 비정상적으로 작동하는 경우 수정이 필요.
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(characterSpeed)
+              characters.up.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(-characterSpeedBack)
+              characters.up.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            characters.rotate(Vector3.Up(), -characterRotationSpeed);
+            characters.rotate(Vector3.Backward(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            characters.rotate(Vector3.Up(), characterRotationSpeed);
+            characters.rotate(Vector3.Backward(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
@@ -500,7 +509,7 @@ function App() {
               }
             }
           } else {
-            // 키 눌려있지 않은 경우
+            // 키 눌려있지 않은 경우ㅈㅁ
             if (animating) {
               // 애니메이션 실행되고 있는지 여부 확인
               // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
