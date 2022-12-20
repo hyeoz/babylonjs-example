@@ -30,6 +30,7 @@ import "@babylonjs/loaders";
 import "babylonjs-loaders";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 import * as CANNON from "cannon";
+import { Color3 } from "babylonjs";
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
@@ -163,7 +164,25 @@ function App() {
       { width: 2, height: 4, depth: 0.1 },
       scene
     );
-    const hinge = MeshBuilder.CreateBox("hinge", {}, scene); // 문이 열리기위한 힌지(문이 열리며 접히는 부분. 눈에 보이지 않음)
+    // NOTE 상호작용을 위한 문 하나 더 생성
+    // 문이 열리는 액션과 캐릭터의 터치를 감지하는 상호작용에 물리엔진을 같이 적용시키면 힌지에만 적용됨..
+    // const doorTouch = MeshBuilder.CreateBox(
+    //   "doorT",
+    //   { width: 2, height: 4 },
+    //   scene
+    // );
+    // doorTouch.position.x = -1;
+    // doorTouch.position.y = 2;
+    // const redMat = new StandardMaterial("red", scene);
+    // redMat.diffuseColor = new Color3(1, 0, 0);
+    // doorTouch.material = redMat;
+    // doorTouch.isVisible = false;
+
+    const hinge = MeshBuilder.CreateBox(
+      "hinge",
+      { width: 2, height: 4 },
+      scene
+    ); // 문이 열리기위한 힌지(문이 열리며 접히는 부분. 눈에 보이지 않음)
     hinge.isVisible = false;
     door.parent = hinge;
     hinge.position.y = 2;
@@ -332,7 +351,7 @@ function App() {
     ground.physicsImpostor = new PhysicsImpostor(
       ground,
       PhysicsImpostor.BoxImpostor,
-      { mass: 0, restitution: 0.5 },
+      { mass: 0, restitution: 0.5, friction: 0.5 },
       scene
     );
     [wall1, wall2, wall3, wall4, wall5, wall6].forEach((w) => {
@@ -349,23 +368,28 @@ function App() {
     // hinge.dispose();
 
     const doorPhysicsRoot = new Mesh("", scene);
+    // const doorDuplicate = new Mesh("dup", scene);
+    // doorDuplicate.addChild(door);
+    // doorDuplicate.setParent(null);
+    // doorPhysicsRoot.addChild(doorTouch);
     doorPhysicsRoot.addChild(hinge);
     doorPhysicsRoot.setParent(null);
     doorPhysicsRoot.physicsImpostor = new PhysicsImpostor(
-      doorPhysicsRoot,
-      PhysicsImpostor.BoxImpostor,
+      // doorTouch,
+      hinge,
+      PhysicsImpostor.MeshImpostor,
       { mass: 0, restitution: 0.1 },
       scene
     );
 
     SceneLoader.ImportMesh(
       "",
-      // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+      "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
       // "https://raw.githubusercontent.com/TrevorDev/gltfModels/master/",
-      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      // "skull.babylon",
+      // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      "shark.glb",
       // "weirdShape.glb",
-      "MergedMouse.glb",
+      // "stickman2.glb",
       scene,
       (newMeshes) => {
         console.log(newMeshes);
@@ -375,7 +399,7 @@ function App() {
         //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
         // 캐릭터 크기, 위치 등 조절
-        character.scaling.scaleInPlace(2);
+        character.scaling.scaleInPlace(0.1);
         // character.rotation.y = Math.PI / 2;
 
         // const characters = character;
@@ -385,7 +409,7 @@ function App() {
         character.dispose();
 
         // const characters = makePhysics(newMeshes, scene, 1);
-        characters.position.y += 1;
+        characters.position.y += 0.4;
         characters.position.z = -5;
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
@@ -431,7 +455,8 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
             characters.moveWithCollisions(
-              characters.up.scaleInPlace(characterSpeed * 2)
+              characters.forward.scaleInPlace(characterSpeed * 2)
+              // characters.up.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
@@ -439,22 +464,26 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
             characters.moveWithCollisions(
-              characters.up.scaleInPlace(characterSpeed)
+              characters.forward.scaleInPlace(characterSpeed)
+              // characters.up.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
             characters.moveWithCollisions(
-              characters.up.scaleInPlace(-characterSpeedBack)
+              characters.forward.scaleInPlace(-characterSpeedBack)
+              // characters.up.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            characters.rotate(Vector3.Backward(), -characterRotationSpeed);
+            characters.rotate(Vector3.Up(), -characterRotationSpeed);
+            // characters.rotate(Vector3.Backward(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            characters.rotate(Vector3.Backward(), characterRotationSpeed);
+            characters.rotate(Vector3.Down(), -characterRotationSpeed);
+            // characters.rotate(Vector3.Backward(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
@@ -533,10 +562,40 @@ function App() {
 
         characters.physicsImpostor = new PhysicsImpostor(
           characters,
-          PhysicsImpostor.SphereImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
+          PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
           { mass: 1, restitution: 0.5 },
           scene
         );
+
+        // NOTE Collide 로 상호작용
+        // 콟백함수 넘기는 경우 화살표 함수로 넘기지 말고 별개의 함수로 전달! (unregister 하는 경우를 위해)
+
+        scene.registerBeforeRender(() => {
+          // console.log(door.intersectsMesh(characters));
+
+          // characters.physicsImpostor &&
+          // characters.physicsImpostor?.registerOnPhysicsCollide(
+          //   doorPhysicsRoot.physicsImpostor,
+          //   detectCollisions
+          // );
+          if (
+            // hinge.rotation.y !== Math.PI / 2 &&
+            door.intersectsMesh(characters)
+          ) {
+            // scene.stopAllAnimations();
+            scene.beginAnimation(
+              hinge,
+              3 * frameRate,
+              10 * frameRate,
+              false,
+              undefined,
+              () => {
+                // on animate end -> 문 열린채로 고정
+                hinge.rotation.y = Math.PI / 2;
+              }
+            );
+          }
+        });
       }
     );
 
@@ -550,6 +609,35 @@ function App() {
     instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
     instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     advancedTexture.addControl(instructions);
+
+    const detectCollisions = (
+      collider: PhysicsImpostor,
+      against: PhysicsImpostor
+    ) => {
+      console.log("detevtCollision");
+
+      // const redMat = new StandardMaterial("Mat", scene);
+      // redMat.diffuseColor = new Color3(1, 0, 0);
+
+      // collider.object.scaling = new Vector3(3, 3, 3);
+      // collider.setScalingUpdated();
+
+      // (against.object as AbstractMesh).material = redMat;
+      if (hinge.rotation.y !== Math.PI / 2) {
+        scene.stopAllAnimations();
+        scene.beginAnimation(
+          hinge,
+          3 * frameRate,
+          10 * frameRate,
+          false,
+          undefined,
+          () => {
+            // on animate end -> 문 열린채로 고정
+            hinge.rotation.y = Math.PI / 2;
+          }
+        );
+      }
+    };
 
     return scene;
   };
