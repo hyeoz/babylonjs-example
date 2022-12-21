@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   AbstractMesh,
   ActionManager,
@@ -354,11 +354,13 @@ function App() {
     doorPhysicsRoot.addChild(hinge);
     doorPhysicsRoot.setParent(null);
     doorPhysicsRoot.physicsImpostor = new PhysicsImpostor(
-      door,
-      PhysicsImpostor.MeshImpostor,
+      doorPhysicsRoot,
+      PhysicsImpostor.BoxImpostor,
       { mass: 0, restitution: 0.1 },
       scene
     );
+
+    let doorStatus = false;
 
     SceneLoader.ImportMesh(
       "",
@@ -370,11 +372,8 @@ function App() {
       // "stickman2.glb",
       scene,
       (newMeshes) => {
-        console.log(newMeshes);
-
+        // console.log(newMeshes);
         let character = newMeshes[0];
-
-        //   scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
 
         // 캐릭터 크기, 위치 등 조절
         character.scaling.scaleInPlace(0.1);
@@ -546,28 +545,9 @@ function App() {
         );
 
         // NOTE Collide 로 상호작용
-        // 콟백함수 넘기는 경우 화살표 함수로 넘기지 말고 별개의 함수로 전달! (unregister 하는 경우를 위해)
-
         scene.registerBeforeRender(() => {
           // console.log(door.intersectsMesh(characters));
-
-          if (
-            // hinge.rotation.y !== Math.PI / 2 &&
-            door.intersectsMesh(characters)
-          ) {
-            // scene.stopAllAnimations();
-            scene.beginAnimation(
-              hinge,
-              3 * frameRate,
-              10 * frameRate,
-              false,
-              undefined,
-              () => {
-                // on animate end -> 문 열린채로 고정
-                hinge.rotation.y = Math.PI / 2;
-              }
-            );
-          }
+          doorStatus = door.intersectsMesh(characters);
         });
       }
     );
@@ -582,6 +562,31 @@ function App() {
     instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
     instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     advancedTexture.addControl(instructions);
+    scene.registerBeforeRender(() => {
+      // console.log(doorStatus);
+      if (
+        // hinge.rotation.y !== Math.PI / 2 &&
+        doorStatus
+      ) {
+        // scene.stopAllAnimations();
+        scene.beginAnimation(
+          door,
+          3 * frameRate,
+          10 * frameRate,
+          false,
+          undefined,
+          () => {
+            // on animate end -> 문 열린채로 고정
+            hinge.rotation.y = Math.PI / 2;
+          }
+        );
+      }
+    });
+    // characters.physicsImpostor &&
+    // characters.physicsImpostor?.registerOnPhysicsCollide(
+    //   doorPhysicsRoot.physicsImpostor,
+    //   detectCollisions
+    // );
 
     return scene;
   };
