@@ -14,6 +14,7 @@ import {
   PhysicsImpostor,
   Scene,
   SceneLoader,
+  Sound,
   StandardMaterial,
   Texture,
   Tools,
@@ -31,6 +32,22 @@ function App() {
 
   const createScene = function () {
     const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
+
+    // NOTE 사운드 효과
+    const soundEffect = new Sound(
+      "sound",
+      "https://raw.githubusercontent.com/BabylonJS/Assets/master/sound/pirateFun.mp3",
+      scene,
+      null,
+      {
+        volume: 0.01,
+      }
+      //  null, {
+      //   autoplay: true,
+      // spatialSound: true,
+      // distanceModel:  // 특정 모델과 가까워지면 출력됨
+      // }
+    );
 
     // NOTE 물리엔진 적용 - cannon
     const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
@@ -371,7 +388,7 @@ function App() {
     ground.physicsImpostor = new PhysicsImpostor(
       ground,
       PhysicsImpostor.BoxImpostor,
-      { mass: 0, restitution: 0.5, friction: 0.5 },
+      { mass: 0, restitution: 0.1, friction: 0.1 },
       scene
     );
     [wall1, wall2, wall3, wall4, wall5, wall6].forEach((w) => {
@@ -397,30 +414,30 @@ function App() {
 
     SceneLoader.ImportMesh(
       "",
-      "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-      // "https://raw.githubusercontent.com/TrevorDev/gltfModels/master/",
-      // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      "shark.glb",
+      // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+      // "https://raw.gㅇㅈithubusercontent.com/TrevorDev/gltfModels/master/",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      // "shark.glb",
       // "weirdShape.glb",
-      // "stickman2.glb",
+      "MergedMouse.glb",
       scene,
       (newMeshes) => {
         // console.log(newMeshes);
         let character = newMeshes[0];
 
         // 캐릭터 크기, 위치 등 조절
-        character.scaling.scaleInPlace(0.1);
+        character.scaling.scaleInPlace(2);
         // character.rotation.y = Math.PI / 2;
 
         // const characters = character;
         const characters = character.getChildMeshes()[0];
-        characters.position.y = 3;
+        characters.position.y = 5;
 
         characters.setParent(null);
         character.dispose();
 
         // const characters = makePhysics(newMeshes, scene, 1);
-        characters.position.y += 0.4;
+        characters.position.y += 3;
         characters.position.z = -5;
         //   Lock camera on the character
         // (scene.activeCamera as ArcRotateCamera).target =
@@ -466,8 +483,8 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(characterSpeed * 2)
-              // characters.up.scaleInPlace(characterSpeed * 2)
+              // characters.forward.scaleInPlace(characterSpeed * 2)
+              characters.up.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
@@ -475,33 +492,36 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(characterSpeed)
-              // characters.up.scaleInPlace(characterSpeed)
+              // characters.forward.scaleInPlace(characterSpeed)
+              characters.up.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(-characterSpeedBack)
-              // characters.up.scaleInPlace(-characterSpeedBack)
+              // characters.forward.scaleInPlace(-characterSpeedBack)
+              characters.up.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            characters.rotate(Vector3.Up(), characterRotationSpeed);
-            // characters.rotate(Vector3.Backward(), -characterRotationSpeed);
+            // characters.rotate(Vector3.Up(), characterRotationSpeed);
+            characters.rotate(Vector3.Backward(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            characters.rotate(Vector3.Down(), characterRotationSpeed);
-            // characters.rotate(Vector3.Backward(), characterRotationSpeed);
+            // characters.rotate(Vector3.Down(), characterRotationSpeed);
+            characters.rotate(Vector3.Backward(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
             keydown = true;
           }
-          if (inputMap["q"]) {
-            characters.rotation.y = Math.PI;
+          if (inputMap["q"] || inputMap["ㅂ"]) {
+            characters.moveWithCollisions(
+              // characters.up.scaleInPlace(characterSpeed)
+              characters.forward.scaleInPlace(characterSpeed)
+            );
             keydown = true;
           }
 
@@ -527,7 +547,7 @@ function App() {
                   swimmingAnimation.to,
                   false
                 );
-              } else if (inputMap["b"]) {
+              } else if (inputMap["b"] || inputMap["ㅠ"]) {
                 // 삼바
                 rumbaAnimation?.start(
                   true,
@@ -548,7 +568,7 @@ function App() {
               }
             }
           } else {
-            // 키 눌려있지 않은 경우ㅈㅁ
+            // 키 눌려있지 않은 경우
             if (animating) {
               // 애니메이션 실행되고 있는지 여부 확인
               // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
@@ -570,11 +590,13 @@ function App() {
             }
           }
         });
+        // soundEffect.setPosition(characters.position);
+        // soundEffect.attachToMesh(characters);
 
         characters.physicsImpostor = new PhysicsImpostor(
           characters,
           PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
-          { mass: 1, restitution: 0.5 },
+          { mass: 2, restitution: 0.1 },
           scene
         );
 
@@ -615,6 +637,10 @@ function App() {
             hinge.rotation.y = Math.PI / 2;
           }
         );
+      }
+
+      if (soundEffect.isReady()) {
+        soundEffect.play();
       }
     });
     // characters.physicsImpostor &&
