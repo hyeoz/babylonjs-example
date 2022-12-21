@@ -1,16 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
-  AbstractMesh,
   ActionManager,
-  AmmoJSPlugin,
   Animation,
-  AnimationGroup,
   ArcRotateCamera,
   CannonJSPlugin,
-  CreateBox,
   CreateCylinder,
-  CreateGround,
-  CreateSphere,
+  CubeTexture,
   Engine,
   ExecuteCodeAction,
   HemisphericLight,
@@ -23,14 +18,12 @@ import {
   Texture,
   Tools,
   Vector3,
-  VertexBuffer,
 } from "@babylonjs/core";
 import "./App.css";
 import "@babylonjs/loaders";
 import "babylonjs-loaders";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 import * as CANNON from "cannon";
-import { Color3 } from "babylonjs";
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
@@ -39,14 +32,19 @@ function App() {
   const createScene = function () {
     const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
 
+    // NOTE 물리엔진 적용 - cannon
+    const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
+    const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
+    scene.enablePhysics(gravityVector, physicsPlugin);
+
     // NOTE 카메라 생성. arc rotate camera 는 항상 대상 위치를 회전 중심으로 하여 해당 대상을 중심으로 회전할 수 있는 카메라.
     // name, alpha, beta, radius, target position, scene 을 매개변수로 받음
     const camera = new ArcRotateCamera(
       "arc camera",
       -Math.PI / 2,
       Math.PI / 4,
-      10,
-      new Vector3(0, 20, -20),
+      20,
+      new Vector3(-10, 20, -20),
       scene
     );
     scene.activeCamera = camera;
@@ -54,6 +52,12 @@ function App() {
     camera.lowerRadiusLimit = 2;
     camera.upperRadiusLimit = 10;
     camera.wheelDeltaPercentage = 0.01;
+
+    var hdrTexture = new CubeTexture(
+      "https://raw.githubusercontent.com/BabylonJS/Assets/master/environments/environmentSpecular.dds",
+      scene
+    );
+    scene.createDefaultSkybox(hdrTexture, true, 10000);
 
     // NOTE 조명 생성
     const light = new HemisphericLight("light", new Vector3(1, 1, 0), scene); // 조명 생성. 반구형 조명으로 name, direction, scene 울 매개변수로 받음
@@ -65,13 +69,47 @@ function App() {
       { width: 30, height: 30, subdivisions: 2 },
       scene
     );
-    let groundMaterial = new StandardMaterial("Ground Material", scene);
-    ground.material = groundMaterial;
-    const groundTexture = new Texture(
-      "https://assets.babylonjs.com/textures/grass.png",
-      scene
-    ); // babylonjs 에서 제공하는 texture
-    groundMaterial.diffuseTexture = groundTexture;
+    ground.isVisible = false;
+    // let groundMaterial = new StandardMaterial("Ground Material", scene);
+    // ground.material = groundMaterial;
+    // const groundTexture = new Texture(
+    //   "https://assets.babylonjs.com/textures/grass.png",
+    //   scene
+    // ); // babylonjs 에서 제공하는 texture
+    // groundMaterial.diffuseTexture = groundTexture;
+
+    // NOTE 블렌더에서 ground 가져오기
+    SceneLoader.ImportMesh(
+      "",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      "customground.glb",
+      scene,
+      (meshes) => {
+        console.log(meshes[0].getChildMeshes());
+
+        const mesh = meshes[0];
+        mesh.scaling = new Vector3(15, 15, 15);
+        // mesh.position.y = -1;
+
+        // const meshGround = mesh.getChildMeshes()[0];
+
+        // meshGround.setParent(null);
+        // mesh.dispose();
+
+        mesh.getChildMeshes().forEach((m) => {
+          if (m.name.indexOf("tree") === -1 || m.name.indexOf("rock") === -1) {
+            // const _m = m.getChildMeshes()[0];
+            m?.setParent(null);
+            m.physicsImpostor = new PhysicsImpostor(
+              m,
+              PhysicsImpostor.BoxImpostor,
+              { mass: 0, restitution: 0.5, friction: 0.5 },
+              scene
+            );
+          }
+        });
+      }
+    );
 
     // NOTE object 생성
     // 건물의 몸체. 각각의 벽으로 둘러 만듦 -> 문 있는 면은 문을 제외하고 3부분으로 나누서 생성해줌
@@ -330,11 +368,6 @@ function App() {
     //   console.log(",fesfmksmf", scene);
     // });
 
-    // NOTE 물리엔진 적용 - cannon
-    const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
-    const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
-    scene.enablePhysics(gravityVector, physicsPlugin);
-
     ground.physicsImpostor = new PhysicsImpostor(
       ground,
       PhysicsImpostor.BoxImpostor,
@@ -381,6 +414,7 @@ function App() {
 
         // const characters = character;
         const characters = character.getChildMeshes()[0];
+        characters.position.y = 3;
 
         characters.setParent(null);
         character.dispose();
@@ -389,8 +423,8 @@ function App() {
         characters.position.y += 0.4;
         characters.position.z = -5;
         //   Lock camera on the character
-        (scene.activeCamera as ArcRotateCamera).target =
-          characters.absolutePosition;
+        // (scene.activeCamera as ArcRotateCamera).target =
+        //   characters.absolutePosition;
 
         // NOTE 이벤트
         var inputMap: { [key: string]: boolean } = {};
@@ -454,12 +488,12 @@ function App() {
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            characters.rotate(Vector3.Up(), -characterRotationSpeed);
+            characters.rotate(Vector3.Up(), characterRotationSpeed);
             // characters.rotate(Vector3.Backward(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            characters.rotate(Vector3.Down(), -characterRotationSpeed);
+            characters.rotate(Vector3.Down(), characterRotationSpeed);
             // characters.rotate(Vector3.Backward(), characterRotationSpeed);
             keydown = true;
           }
@@ -562,6 +596,7 @@ function App() {
     instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
     instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     advancedTexture.addControl(instructions);
+
     scene.registerBeforeRender(() => {
       // console.log(doorStatus);
       if (
