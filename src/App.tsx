@@ -28,32 +28,8 @@ import * as CANNON from "cannon";
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
-  const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
 
-  const createScene = function () {
-    const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
-
-    // NOTE 사운드 효과
-    const soundEffect = new Sound(
-      "sound",
-      "https://raw.githubusercontent.com/BabylonJS/Assets/master/sound/pirateFun.mp3",
-      scene,
-      null,
-      {
-        volume: 0.01,
-      }
-      //  null, {
-      //   autoplay: true,
-      // spatialSound: true,
-      // distanceModel:  // 특정 모델과 가까워지면 출력됨
-      // }
-    );
-
-    // NOTE 물리엔진 적용 - cannon
-    const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
-    const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
-    scene.enablePhysics(gravityVector, physicsPlugin);
-
+  const createScene = function (scene: Scene) {
     // NOTE 카메라 생성. arc rotate camera 는 항상 대상 위치를 회전 중심으로 하여 해당 대상을 중심으로 회전할 수 있는 카메라.
     // name, alpha, beta, radius, target position, scene 을 매개변수로 받음
     const camera = new ArcRotateCamera(
@@ -95,6 +71,28 @@ function App() {
     // ); // babylonjs 에서 제공하는 texture
     // groundMaterial.diffuseTexture = groundTexture;
 
+    // NOTE 사운드 실행
+    new Sound(
+      "sound",
+      "https://raw.githubusercontent.com/BabylonJS/Assets/master/sound/pirateFun.mp3",
+      // "./birds.wav",
+      scene,
+      () => {
+        console.log("SOUND PLAY");
+      },
+      { autoplay: true, loop: true }
+      //  null, {
+      //   autoplay: true,
+      // spatialSound: true,
+      // distanceModel:  // 특정 모델과 가까워지면 출력됨
+      // }
+    );
+
+    // NOTE 물리엔진 적용 - cannon
+    const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
+    const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
+    scene.enablePhysics(gravityVector, physicsPlugin);
+
     // NOTE 블렌더에서 ground 가져오기
     SceneLoader.ImportMesh(
       "",
@@ -102,16 +100,10 @@ function App() {
       "customground.glb",
       scene,
       (meshes) => {
-        console.log(meshes[0].getChildMeshes());
+        // console.log(meshes[0].getChildMeshes());
 
         const mesh = meshes[0];
         mesh.scaling = new Vector3(15, 15, 15);
-        // mesh.position.y = -1;
-
-        // const meshGround = mesh.getChildMeshes()[0];
-
-        // meshGround.setParent(null);
-        // mesh.dispose();
 
         mesh.getChildMeshes().forEach((m) => {
           if (m.name.indexOf("tree") === -1 || m.name.indexOf("rock") === -1) {
@@ -125,6 +117,7 @@ function App() {
             );
           }
         });
+        console.log(mesh.position);
       }
     );
 
@@ -379,18 +372,6 @@ function App() {
     // scene.beginAnimation(camera, 0, 15 * frameRate, false);
     // scene.beginAnimation(hinge, 0, 15 * frameRate, false);
 
-    // NOTE 캐릭터 렌더링
-
-    // SceneLoader.Append("./", "rumba.glb", scene, function (scene) {
-    //   console.log(",fesfmksmf", scene);
-    // });
-
-    ground.physicsImpostor = new PhysicsImpostor(
-      ground,
-      PhysicsImpostor.BoxImpostor,
-      { mass: 0, restitution: 0.1, friction: 0.1 },
-      scene
-    );
     [wall1, wall2, wall3, wall4, wall5, wall6].forEach((w) => {
       w.physicsImpostor = new PhysicsImpostor(
         w,
@@ -410,38 +391,40 @@ function App() {
       scene
     );
 
+    // 문 열림 여부
     let doorStatus = false;
 
+    // NOTE 캐릭터 렌더링
     SceneLoader.ImportMesh(
       "",
       // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+      "./",
       // "https://raw.gㅇㅈithubusercontent.com/TrevorDev/gltfModels/master/",
-      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      // "shark.glb",
+      // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      "shark.glb",
       // "weirdShape.glb",
-      "MergedMouse.glb",
+      // "MergedMouse.glb",
       scene,
       (newMeshes) => {
         // console.log(newMeshes);
         let character = newMeshes[0];
 
         // 캐릭터 크기, 위치 등 조절
-        character.scaling.scaleInPlace(2);
+        character.scaling.scaleInPlace(0.1);
         // character.rotation.y = Math.PI / 2;
 
         // const characters = character;
         const characters = character.getChildMeshes()[0];
-        characters.position.y = 5;
 
         characters.setParent(null);
         character.dispose();
 
         // const characters = makePhysics(newMeshes, scene, 1);
-        characters.position.y += 3;
-        characters.position.z = -5;
+        characters.position.y = 1;
+        characters.position.z = 0;
         //   Lock camera on the character
-        // (scene.activeCamera as ArcRotateCamera).target =
-        //   characters.absolutePosition;
+        (scene.activeCamera as ArcRotateCamera).target =
+          characters.absolutePosition;
 
         // NOTE 이벤트
         var inputMap: { [key: string]: boolean } = {};
@@ -492,26 +475,26 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
             characters.moveWithCollisions(
-              // characters.forward.scaleInPlace(characterSpeed)
-              characters.up.scaleInPlace(characterSpeed)
+              characters.forward.scaleInPlace(characterSpeed)
+              // characters.up.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
             characters.moveWithCollisions(
-              // characters.forward.scaleInPlace(-characterSpeedBack)
-              characters.up.scaleInPlace(-characterSpeedBack)
+              characters.forward.scaleInPlace(-characterSpeedBack)
+              // characters.up.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            // characters.rotate(Vector3.Up(), characterRotationSpeed);
-            characters.rotate(Vector3.Backward(), -characterRotationSpeed);
+            characters.rotate(Vector3.Up(), characterRotationSpeed);
+            // characters.rotate(Vector3.Backward(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            // characters.rotate(Vector3.Down(), characterRotationSpeed);
-            characters.rotate(Vector3.Backward(), characterRotationSpeed);
+            characters.rotate(Vector3.Down(), characterRotationSpeed);
+            // characters.rotate(Vector3.Backward(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
@@ -519,8 +502,8 @@ function App() {
           }
           if (inputMap["q"] || inputMap["ㅂ"]) {
             characters.moveWithCollisions(
-              // characters.up.scaleInPlace(characterSpeed)
-              characters.forward.scaleInPlace(characterSpeed)
+              characters.up.scaleInPlace(characterSpeed)
+              // characters.forward.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
@@ -600,7 +583,9 @@ function App() {
           scene
         );
 
-        // NOTE Collide 로 상호작용
+        characters.position.z = -5;
+
+        // NOTE Collide 로 상호작용 or intersectMesh 로 상호작용
         scene.registerBeforeRender(() => {
           // console.log(door.intersectsMesh(characters));
           doorStatus = door.intersectsMesh(characters);
@@ -620,11 +605,7 @@ function App() {
     advancedTexture.addControl(instructions);
 
     scene.registerBeforeRender(() => {
-      // console.log(doorStatus);
-      if (
-        // hinge.rotation.y !== Math.PI / 2 &&
-        doorStatus
-      ) {
+      if (doorStatus) {
         // scene.stopAllAnimations();
         scene.beginAnimation(
           door,
@@ -638,25 +619,27 @@ function App() {
           }
         );
       }
-
-      if (soundEffect.isReady()) {
-        soundEffect.play();
-      }
     });
-    // characters.physicsImpostor &&
-    // characters.physicsImpostor?.registerOnPhysicsCollide(
-    //   doorPhysicsRoot.physicsImpostor,
-    //   detectCollisions
-    // );
 
     return scene;
   };
 
   useEffect(() => {
-    // react 로 작성시 scene 생성은 useffect 로 관리.
-    const scene = createScene(); // createScene 함수 실행
+    const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
+    const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
 
+    // react 로 작성시 scene 생성은 useffect 로 관리.
+    // NOTE 사운드 효과
     // 렌더링
+    // console.log(scene.isReady());
+
+    if (scene.isReady()) {
+      createScene(scene); // createScene 함수 실행
+    } else {
+      scene.onReadyObservable.addOnce((scene) => {
+        console.log("not ready");
+      });
+    }
     engine.runRenderLoop(function () {
       scene.render();
     });
