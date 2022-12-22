@@ -4,6 +4,7 @@ import {
   ActionManager,
   CreateCylinder,
   DynamicTexture,
+  Engine,
   ExecuteCodeAction,
   MeshBuilder,
   Scene,
@@ -13,8 +14,13 @@ import {
   Tools,
   Vector3,
 } from "@babylonjs/core";
+import {
+  createCSSobject,
+  createMaskingScreen,
+  setupRenderer,
+} from "./css3drenderer";
 
-export default function createBuilding(scene: Scene) {
+export default function createBuilding(scene: Scene, engine: Engine) {
   // 건물의 몸체. 각각의 벽으로 둘러 만듦 -> 문 있는 면은 문을 제외하고 3부분으로 나누서 생성해줌
   const wall1 = MeshBuilder.CreateBox("wall", {
     width: 4,
@@ -101,33 +107,59 @@ export default function createBuilding(scene: Scene) {
 
   const board = MeshBuilder.CreateBox(
     "board",
-    { width: 2, height: 2, depth: 0.1 },
+    { width: 12, height: 6, depth: 0.1 },
     scene
   );
   const boardLeg = MeshBuilder.CreateBox(
     "boardLeg",
-    { width: 0.5, height: 2, depth: 0.1 },
+    { width: 0.5, height: 1, depth: 0.1 },
     scene
   );
-  board.position = new Vector3(2, 2, -2);
-  boardLeg.position = new Vector3(2, 1, -2);
+  board.position = new Vector3(-15, 4, -10);
+  board.rotation.y = (Math.PI / 2) * 3;
+  boardLeg.position = new Vector3(-15, 0.5, -10);
+  boardLeg.rotation.y = (Math.PI / 2) * 3;
 
-  const boardTexture = new DynamicTexture(
-    "boardTexture",
-    { width: 2, height: 2 },
-    scene
-  );
-  var boardMaterial = new StandardMaterial("boardMaterial", scene);
-  boardMaterial.diffuseTexture = boardTexture;
-  board.material = boardMaterial;
-  boardTexture.drawText(
-    "WASD 키로 이동할 수 있습니다.\n W와 Shift 를 함께 누르면 빠르게 이동이 가능해요. \n 마우스를 움직이면 시점을 변경할 수 있습니다. \n 왼쪽 상단 스피커 모양을 클릭해 사운드를 들을 수 있습니다.",
-    0,
-    0,
-    "bold 20px monospace",
-    "black",
-    "white"
-  );
+  //   const boardTexture = new DynamicTexture(
+  //     "boardTexture",
+  //     { width: 2, height: 2 },
+  //     scene
+  //   );
+  //   var boardMaterial = new StandardMaterial("boardMaterial", scene);
+  //   boardMaterial.diffuseTexture = boardTexture;
+  //   board.material = boardMaterial;
+  //   boardTexture.drawText(
+  //     "WASD 키로 이동할 수 있습니다.\n W와 Shift 를 함께 누르면 빠르게 이동이 가능해요. \n 마우스를 움직이면 시점을 변경할 수 있습니다. \n 왼쪽 상단 스피커 모양을 클릭해 사운드를 들을 수 있습니다.",
+  //     2,
+  //     2,
+  //     "bold 20px",
+  //     "red",
+  //     "black",
+  //     true,
+  //     true
+  //   );
+  //   let el: HTMLElement = document.createElement("div");
+  //   let exist = false;
+  //   if (document.getElementById("spDiv")) {
+  //     exist = true;
+  //     el = document.getElementById("spDiv") as HTMLElement;
+  //   }
+
+  //   let zone = document.getElementById("canvasZone") as HTMLCanvasElement;
+
+  //   el.id = "spDiv";
+
+  //   if (!exist) {
+  //     el.innerHTML =
+  //       '<iframe width="1280" height="720" src="https://www.youtube.com/embed/YKqXcrWliww" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+  //     zone.appendChild(el);
+  //   }
+  //   let existingRenderer = document.getElementById("css-container");
+  //   if (existingRenderer) existingRenderer.remove();
+
+  //   const renderer = setupRenderer();
+  //   createCSSobject(board, scene, "qgKbpe4qvno", renderer);
+  //   createMaskingScreen(board, scene, engine, renderer);
 
   // 애니메이션을 위한 문 만들기
   const door = MeshBuilder.CreateBox(

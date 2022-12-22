@@ -30,7 +30,7 @@ import createBuilding from "./createBuilding";
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
 
-  const createScene = function (scene: Scene) {
+  const createScene = function (scene: Scene, engine: Engine) {
     // NOTE 카메라 생성. arc rotate camera 는 항상 대상 위치를 회전 중심으로 하여 해당 대상을 중심으로 회전할 수 있는 카메라.
     // name, alpha, beta, radius, target position, scene 을 매개변수로 받음
     const camera = new ArcRotateCamera(
@@ -116,13 +116,13 @@ function App() {
             );
           }
         });
-        console.log(mesh.position);
+        // console.log(mesh.position);
       }
     );
 
     // 분리
     const { frameRate, hinge, wall1, wall2, wall3, wall4, wall5, wall6, door } =
-      createBuilding(scene);
+      createBuilding(scene, engine);
 
     // NOTE 애니메이션 생성
     // 카메라 이동 애니메이션
@@ -329,8 +329,8 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
             characters.moveWithCollisions(
-              // characters.forward.scaleInPlace(characterSpeed * 2)
-              characters.up.scaleInPlace(characterSpeed * 2)
+              characters.forward.scaleInPlace(characterSpeed * 2)
+              // characters.up.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
@@ -505,7 +505,7 @@ function App() {
     // console.log(scene.isReady());
 
     if (scene.isReady()) {
-      createScene(scene); // createScene 함수 실행
+      createScene(scene, engine); // createScene 함수 실행
     } else {
       scene.onReadyObservable.addOnce((scene) => {
         console.log("not ready");
