@@ -1,27 +1,39 @@
 import { Camera, Matrix, Mesh, Scene, StandardMaterial } from "@babylonjs/core";
 
 export function setupRenderer() {
+  const prevContainer = document.getElementById("css-container");
+  if (prevContainer) prevContainer.remove();
   let container = document.createElement("div");
   container.id = "css-container";
   container.style.position = "absolute";
   container.style.width = "100%";
   container.style.height = "100%";
-  container.style.zIndex = "-1";
+  container.style.zIndex = "-1"; // TODO zindex 를 높이면 화면이 보이는데 카메라 액션이 적용되지 않음..
 
   let canvasZone = document.getElementById("canvasZone");
-  canvasZone?.insertBefore(container, canvasZone.firstChild);
+  if (canvasZone) {
+    canvasZone.insertBefore(container, canvasZone.firstChild);
+  } else {
+    return;
+  }
 
-  let renderer = new CSS3DRenderer();
+  let renderer = new CSS3DRenderer(); // css3drenderer 는 three.js 라이브러리, 직접 작성하여 사용
   container.appendChild(renderer.domElement);
   renderer.setSize(canvasZone?.offsetWidth, canvasZone?.offsetHeight);
 
-  window.addEventListener("resize", (e) => {
+  window.addEventListener("resize", () => {
     renderer.setSize(canvasZone?.offsetWidth, canvasZone.offsetHeight);
   });
   return renderer;
 }
 
-export function createCSSobject(mesh, scene, videoID, renderer) {
+export function createCSSobject(
+  mesh,
+  scene,
+  videoID,
+  renderer,
+  youtubeFocused
+) {
   let width = 480;
   let height = 460;
   scene.onBeforeRenderObservable.add(() => {
@@ -49,23 +61,16 @@ export function createCSSobject(mesh, scene, videoID, renderer) {
     "?rel=0&enablejsapi=1&disablekb=1&autoplay=1&controls=0&fs=0&modestbranding=1",
   ].join("");
   div.appendChild(iframe);
+  // Another new bit that toggles on/off pointer events to body
+  div.addEventListener("mouseout", () => {
+    youtubeFocused = false;
+    console.log("CANVAS");
+    document.getElementsByTagName("body")[0].style.pointerEvents = "auto";
+  });
 
-  //   return CSSobject;
-}
+  console.log(div, "===> css object");
 
-export function createMaskingScreen(maskMesh, scene, engine, renderer) {
-  let depthMask = new StandardMaterial("matDepthMask", scene);
-  depthMask.backFaceCulling = false;
-
-  maskMesh.material = depthMask;
-
-  maskMesh.onBeforeRenderObservable.add(() => engine.setColorWrite(false));
-  maskMesh.onAfterRenderObservable.add(() => engine.setColorWrite(true));
-
-  // swap meshes to put mask first
-  var mask_index = scene.meshes.indexOf(maskMesh);
-  scene.meshes[mask_index] = scene.meshes[0];
-  scene.meshes[0] = maskMesh;
+  return CSSobject;
 }
 
 class CSS3DObject extends Mesh {

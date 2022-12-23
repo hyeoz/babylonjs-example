@@ -8,6 +8,7 @@ import {
   CubeTexture,
   Engine,
   ExecuteCodeAction,
+  FreeCamera,
   HemisphericLight,
   Mesh,
   MeshBuilder,
@@ -26,6 +27,9 @@ import "babylonjs-loaders";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 import * as CANNON from "cannon";
 import createBuilding from "./createBuilding";
+import { createCSSobject, setupRenderer } from "./css3drenderer";
+
+var youtubeFocused = false;
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
@@ -41,11 +45,13 @@ function App() {
       new Vector3(-10, 20, -20),
       scene
     );
+    // const camera = new FreeCamera("camera", new Vector3(-20, 20, -20), scene);
+    // camera.rotation = new Vector3(0, -4, 0);
     scene.activeCamera = camera;
     scene.activeCamera.attachControl(canvas, true);
-    camera.lowerRadiusLimit = 2;
-    camera.upperRadiusLimit = 10;
-    camera.wheelDeltaPercentage = 0.01;
+    // camera.lowerRadiusLimit = 2;
+    // camera.upperRadiusLimit = 10;
+    // camera.wheelDeltaPercentage = 0.01;
 
     var hdrTexture = new CubeTexture(
       "https://raw.githubusercontent.com/BabylonJS/Assets/master/environments/environmentSpecular.dds",
@@ -87,6 +93,55 @@ function App() {
       // }
     );
 
+    // TODO iframe 적용
+    let el: HTMLElement = document.createElement("div");
+    let exist = false;
+    if (document.getElementById("spDiv")) {
+      exist = true;
+      el = document.getElementById("spDiv") as HTMLElement;
+    }
+
+    let zone = document.getElementById("canvasZone") as HTMLCanvasElement;
+
+    el.id = "spDiv";
+
+    if (!exist) {
+      el.innerHTML =
+        '<iframe width="1280" height="720" src="" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+      zone.appendChild(el);
+    }
+
+    const mat = new StandardMaterial("mat", scene);
+    mat.alpha = 0.0;
+    mat.needAlphaBlending = () => false;
+    mat.backFaceCulling = true;
+
+    // The CSS object will follow this mesh
+    const plane = MeshBuilder.CreatePlane(
+      "css_plane",
+      { width: 1, height: 1 },
+      scene
+    );
+    plane.rotationQuaternion = null;
+    plane.scaling.x = 10;
+    plane.scaling.y = 6;
+    plane.position.y = 1;
+    plane.checkCollisions = true;
+    plane.material = mat;
+    plane.position = new Vector3(-15, 4, -10);
+    plane.rotation.y = -Math.PI / 2;
+
+    // css object 렌더링
+    let existingRenderer = document.getElementById("css-container");
+    if (existingRenderer) existingRenderer.remove();
+    let renderer = setupRenderer();
+    createCSSobject(plane, scene, "hEqJLnEWVKk", renderer, youtubeFocused);
+
+    scene.collisionsEnabled = true;
+    ground.checkCollisions = true;
+    camera.checkCollisions = true;
+    // camera.applyGravity = true;
+
     // NOTE 물리엔진 적용 - cannon
     const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
     const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
@@ -103,6 +158,7 @@ function App() {
 
         const mesh = meshes[0];
         mesh.scaling = new Vector3(15, 15, 15);
+        mesh.checkCollisions = true;
 
         mesh.getChildMeshes().forEach((m) => {
           if (m.name.indexOf("tree") === -1 || m.name.indexOf("rock") === -1) {
@@ -485,6 +541,10 @@ function App() {
       }
     });
 
+    window.addEventListener("pointermove", (event) => listener(event, scene));
+    window.addEventListener("pointerdown", (event) => listener(event, scene));
+    window.addEventListener("pointerup", (event) => listener(event, scene));
+
     return scene;
   };
 
@@ -495,6 +555,21 @@ function App() {
     });
   };
 
+  // TODO div 에 호버되면 canvas pointer event 를 죽여서 클릭이 되도록
+  var listener = function (evt: any, scene: Scene) {
+    let pick = scene.pick(Math.round(evt.offsetX), Math.round(evt.offsetY));
+    if (!pick) return;
+    if (pick.pickedMesh) {
+      if (pick.pickedMesh.name === "css_plane") {
+        if (!youtubeFocused) {
+          youtubeFocused = true;
+          // console.log("YOUTUBE");
+          document.getElementsByTagName("body")[0].style.pointerEvents = "none";
+        }
+      }
+    }
+    // console.log(evt, pick.pickedMesh?.name, "===> ??");
+  };
   useEffect(() => {
     const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
     const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌

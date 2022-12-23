@@ -6,6 +6,7 @@ import {
   DynamicTexture,
   Engine,
   ExecuteCodeAction,
+  Mesh,
   MeshBuilder,
   Scene,
   Sound,
@@ -14,11 +15,6 @@ import {
   Tools,
   Vector3,
 } from "@babylonjs/core";
-import {
-  createCSSobject,
-  createMaskingScreen,
-  setupRenderer,
-} from "./css3drenderer";
 
 export default function createBuilding(scene: Scene, engine: Engine) {
   // 건물의 몸체. 각각의 벽으로 둘러 만듦 -> 문 있는 면은 문을 제외하고 3부분으로 나누서 생성해줌
@@ -105,18 +101,18 @@ export default function createBuilding(scene: Scene, engine: Engine) {
   roof.position.z = 3.5;
   roof.rotation.z = Tools.ToRadians(90);
 
-  const board = MeshBuilder.CreateBox(
-    "board",
-    { width: 12, height: 6, depth: 0.1 },
-    scene
-  );
+  //   const board = MeshBuilder.CreateBox(
+  //     "board",
+  //     { width: 12, height: 6, depth: 0.1 },
+  //     scene
+  //   );
   const boardLeg = MeshBuilder.CreateBox(
     "boardLeg",
     { width: 0.5, height: 1, depth: 0.1 },
     scene
   );
-  board.position = new Vector3(-15, 4, -10);
-  board.rotation.y = (Math.PI / 2) * 3;
+  //   board.position = new Vector3(-15, 4, -10);
+  //   board.rotation.y = (Math.PI / 2) * 3;
   boardLeg.position = new Vector3(-15, 0.5, -10);
   boardLeg.rotation.y = (Math.PI / 2) * 3;
 
@@ -138,29 +134,6 @@ export default function createBuilding(scene: Scene, engine: Engine) {
   //     true,
   //     true
   //   );
-  //   let el: HTMLElement = document.createElement("div");
-  //   let exist = false;
-  //   if (document.getElementById("spDiv")) {
-  //     exist = true;
-  //     el = document.getElementById("spDiv") as HTMLElement;
-  //   }
-
-  //   let zone = document.getElementById("canvasZone") as HTMLCanvasElement;
-
-  //   el.id = "spDiv";
-
-  //   if (!exist) {
-  //     el.innerHTML =
-  //       '<iframe width="1280" height="720" src="https://www.youtube.com/embed/YKqXcrWliww" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
-  //     zone.appendChild(el);
-  //   }
-  //   let existingRenderer = document.getElementById("css-container");
-  //   if (existingRenderer) existingRenderer.remove();
-
-  //   const renderer = setupRenderer();
-  //   createCSSobject(board, scene, "qgKbpe4qvno", renderer);
-  //   createMaskingScreen(board, scene, engine, renderer);
-
   // 애니메이션을 위한 문 만들기
   const door = MeshBuilder.CreateBox(
     "door",
@@ -213,7 +186,6 @@ export default function createBuilding(scene: Scene, engine: Engine) {
       }
     })
   );
-
   return {
     scene,
     hinge,
