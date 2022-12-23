@@ -113,27 +113,9 @@ export default function createBuilding(scene: Scene, engine: Engine) {
   );
   //   board.position = new Vector3(-15, 4, -10);
   //   board.rotation.y = (Math.PI / 2) * 3;
-  boardLeg.position = new Vector3(-15, 0.5, -10);
+  boardLeg.position = new Vector3(-15, 0.5, -6);
   boardLeg.rotation.y = (Math.PI / 2) * 3;
 
-  //   const boardTexture = new DynamicTexture(
-  //     "boardTexture",
-  //     { width: 2, height: 2 },
-  //     scene
-  //   );
-  //   var boardMaterial = new StandardMaterial("boardMaterial", scene);
-  //   boardMaterial.diffuseTexture = boardTexture;
-  //   board.material = boardMaterial;
-  //   boardTexture.drawText(
-  //     "WASD 키로 이동할 수 있습니다.\n W와 Shift 를 함께 누르면 빠르게 이동이 가능해요. \n 마우스를 움직이면 시점을 변경할 수 있습니다. \n 왼쪽 상단 스피커 모양을 클릭해 사운드를 들을 수 있습니다.",
-  //     2,
-  //     2,
-  //     "bold 20px",
-  //     "red",
-  //     "black",
-  //     true,
-  //     true
-  //   );
   // 애니메이션을 위한 문 만들기
   const door = MeshBuilder.CreateBox(
     "door",

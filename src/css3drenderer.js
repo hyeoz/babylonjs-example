@@ -35,7 +35,7 @@ export function createCSSobject(
   youtubeFocused
 ) {
   let width = 480;
-  let height = 460;
+  let height = 300;
   scene.onBeforeRenderObservable.add(() => {
     renderer.render(scene, scene.activeCamera);
   });
@@ -54,12 +54,12 @@ export function createCSSobject(
   iframe.style.height = height + "px";
   iframe.style.border = "0px";
   iframe.allow = "autoplay";
-  //   iframe.src = "https://www.babylonjs.com";
-  iframe.src = [
-    "https://www.youtube.com/embed/",
-    videoID,
-    "?rel=0&enablejsapi=1&disablekb=1&autoplay=1&controls=0&fs=0&modestbranding=1",
-  ].join("");
+  iframe.src = "https://www.babylonjs.com";
+  //   iframe.src = [
+  //     "https://www.youtube.com/embed/",
+  //     videoID,
+  //     "?rel=0&enablejsapi=1&disablekb=1&autoplay=1&controls=0&fs=0&modestbranding=1",
+  //   ].join("");
   div.appendChild(iframe);
   // Another new bit that toggles on/off pointer events to body
   div.addEventListener("mouseout", () => {

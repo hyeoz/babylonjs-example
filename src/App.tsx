@@ -123,12 +123,12 @@ function App() {
       scene
     );
     plane.rotationQuaternion = null;
-    plane.scaling.x = 10;
-    plane.scaling.y = 6;
+    plane.scaling.x = 20;
+    plane.scaling.y = 8;
     plane.position.y = 1;
     plane.checkCollisions = true;
     plane.material = mat;
-    plane.position = new Vector3(-15, 4, -10);
+    plane.position = new Vector3(-15, 5, -6);
     plane.rotation.y = -Math.PI / 2;
 
     // css object 렌더링
@@ -140,7 +140,6 @@ function App() {
     scene.collisionsEnabled = true;
     ground.checkCollisions = true;
     camera.checkCollisions = true;
-    // camera.applyGravity = true;
 
     // NOTE 물리엔진 적용 - cannon
     const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
@@ -154,8 +153,6 @@ function App() {
       "customground.glb",
       scene,
       (meshes) => {
-        // console.log(meshes[0].getChildMeshes());
-
         const mesh = meshes[0];
         mesh.scaling = new Vector3(15, 15, 15);
         mesh.checkCollisions = true;
@@ -234,7 +231,7 @@ function App() {
     camera.animations.push(rotate);
 
     // 문 열리는 애니메이션
-    // TODO 회전의 중심은 항상 같게 둬야하는지? 바꿀 수 없는지..
+    // 회전의 중심은 항상 같게 둬야하는지? 바꿀 수 없는지..
     const sweep = new Animation(
       "sweep",
       "rotation.y",
@@ -541,10 +538,6 @@ function App() {
       }
     });
 
-    window.addEventListener("pointermove", (event) => listener(event, scene));
-    window.addEventListener("pointerdown", (event) => listener(event, scene));
-    window.addEventListener("pointerup", (event) => listener(event, scene));
-
     return scene;
   };
 
@@ -556,19 +549,21 @@ function App() {
   };
 
   // TODO div 에 호버되면 canvas pointer event 를 죽여서 클릭이 되도록
-  var listener = function (evt: any, scene: Scene) {
+  var listener = function (evt: any, scene: Scene, youtubeFocused: boolean) {
     let pick = scene.pick(Math.round(evt.offsetX), Math.round(evt.offsetY));
-    if (!pick) return;
-    if (pick.pickedMesh) {
-      if (pick.pickedMesh.name === "css_plane") {
-        if (!youtubeFocused) {
-          youtubeFocused = true;
-          // console.log("YOUTUBE");
-          document.getElementsByTagName("body")[0].style.pointerEvents = "none";
-        }
+    if (!pick.pickedMesh) return;
+    if (pick.pickedMesh.name === "css_plane") {
+      if (!youtubeFocused) {
+        youtubeFocused = true;
+        console.log("YOUTUBE");
       }
     }
-    // console.log(evt, pick.pickedMesh?.name, "===> ??");
+    console.log(pick.pickedMesh?.name, "===> ??", youtubeFocused);
+    if (youtubeFocused) {
+      document.getElementsByTagName("body")[0].style.pointerEvents = "none";
+    } else {
+      document.getElementsByTagName("body")[0].style.pointerEvents = "auto";
+    }
   };
   useEffect(() => {
     const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
@@ -594,11 +589,30 @@ function App() {
     window.addEventListener("resize", function () {
       engine.resize();
     });
+    window.addEventListener("pointermove", (event) =>
+      listener(event, scene, youtubeFocused)
+    );
+    window.addEventListener("pointerdown", (event) =>
+      listener(event, scene, youtubeFocused)
+    );
+    window.addEventListener("pointerup", (event) =>
+      listener(event, scene, youtubeFocused)
+    );
 
     return () => {
       window.removeEventListener("resize", function () {
         engine.resize();
       });
+
+      window.removeEventListener("pointermove", (event) =>
+        listener(event, scene, youtubeFocused)
+      );
+      window.removeEventListener("pointerdown", (event) =>
+        listener(event, scene, youtubeFocused)
+      );
+      window.removeEventListener("pointerup", (event) =>
+        listener(event, scene, youtubeFocused)
+      );
     };
   }, []);
 
