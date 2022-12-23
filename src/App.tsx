@@ -27,11 +27,19 @@ import "babylonjs-loaders";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 import * as CANNON from "cannon";
 import createBuilding from "./createBuilding";
-import { createCSSobject, setupRenderer } from "./css3drenderer";
+import {
+  createCSSobject,
+  createCSSobjectYoutube,
+  setupRenderer,
+} from "./css3drenderer";
 
 var youtubeFocused = false;
 
 function App() {
+  document.cookie = "safeCookie1=foo; SameSite=Lax";
+  document.cookie = "safeCookie2=foo";
+  document.cookie = "crossCookie=bar; SameSite=None; Secure";
+
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
 
   const createScene = function (scene: Scene, engine: Engine) {
@@ -78,6 +86,10 @@ function App() {
     // ); // babylonjs 에서 제공하는 texture
     // groundMaterial.diffuseTexture = groundTexture;
 
+    // TODO 모달에 iframe 생성
+    const modal = document.getElementById("modal");
+    console.log(modal);
+
     // NOTE 사운드 실행
     new Sound(
       "sound",
@@ -94,23 +106,6 @@ function App() {
     );
 
     // TODO iframe 적용
-    let el: HTMLElement = document.createElement("div");
-    let exist = false;
-    if (document.getElementById("spDiv")) {
-      exist = true;
-      el = document.getElementById("spDiv") as HTMLElement;
-    }
-
-    let zone = document.getElementById("canvasZone") as HTMLCanvasElement;
-
-    el.id = "spDiv";
-
-    if (!exist) {
-      el.innerHTML =
-        '<iframe width="1280" height="720" src="" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
-      zone.appendChild(el);
-    }
-
     const mat = new StandardMaterial("mat", scene);
     mat.alpha = 0.0;
     mat.needAlphaBlending = () => false;
@@ -132,10 +127,36 @@ function App() {
     plane.rotation.y = -Math.PI / 2;
 
     // css object 렌더링
-    let existingRenderer = document.getElementById("css-container");
-    if (existingRenderer) existingRenderer.remove();
+    // let existingRenderer = document.getElementById("css-container");
+    // if (existingRenderer) existingRenderer.remove();
     let renderer = setupRenderer();
-    createCSSobject(plane, scene, "hEqJLnEWVKk", renderer, youtubeFocused);
+    createCSSobject(plane, scene, "babylonjs", renderer, youtubeFocused);
+
+    // youtube
+    // const plane2 = MeshBuilder.CreatePlane(
+    //   "css_plane2",
+    //   { width: 1, height: 1 },
+    //   scene
+    // );
+    // plane2.rotationQuaternion = null;
+    // plane2.scaling.x = 5;
+    // plane2.scaling.y = 3;
+    // plane2.position.y = 1;
+    // plane2.checkCollisions = true;
+    // plane2.material = mat;
+    // plane2.position = new Vector3(4, 5, -6);
+    // // plane2.rotation.y = -Math.PI / 2;
+
+    // // let existingRenderer2 = document.getElementById("css-container");
+    // // if (existingRenderer2) existingRenderer2.remove();
+    // let renderer2 = setupRenderer();
+    // createCSSobjectYoutube(
+    //   plane2,
+    //   scene,
+    //   "hEqJLnEWVKk",
+    //   renderer2,
+    //   youtubeFocused
+    // );
 
     scene.collisionsEnabled = true;
     ground.checkCollisions = true;
@@ -316,7 +337,7 @@ function App() {
     SceneLoader.ImportMesh(
       "",
       // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-      "./",
+      "./", // 상대경로 기준은 public 폴더로 인식됨
       // "https://raw.gㅇㅈithubusercontent.com/TrevorDev/gltfModels/master/",
       // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
       "shark.glb",
@@ -548,31 +569,31 @@ function App() {
     });
   };
 
-  // TODO div 에 호버되면 canvas pointer event 를 죽여서 클릭이 되도록
+  // NOTE iframe / canvas pointer event
   var listener = function (evt: any, scene: Scene, youtubeFocused: boolean) {
     let pick = scene.pick(Math.round(evt.offsetX), Math.round(evt.offsetY));
     if (!pick.pickedMesh) return;
     if (pick.pickedMesh.name === "css_plane") {
       if (!youtubeFocused) {
         youtubeFocused = true;
-        console.log("YOUTUBE");
+        // console.log("YOUTUBE");
       }
     }
-    console.log(pick.pickedMesh?.name, "===> ??", youtubeFocused);
+
+    // div 에 호버되면 canvas pointer event 를 죽여서 클릭이 되도록
     if (youtubeFocused) {
       document.getElementsByTagName("body")[0].style.pointerEvents = "none";
     } else {
       document.getElementsByTagName("body")[0].style.pointerEvents = "auto";
     }
   };
+
+  // modal?.style.display = 'none';
+
+  // react 로 작성시 scene 생성은 useffect 로 관리.
   useEffect(() => {
     const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
     const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
-
-    // react 로 작성시 scene 생성은 useffect 로 관리.
-    // NOTE 사운드 효과
-    // 렌더링
-    // console.log(scene.isReady());
 
     if (scene.isReady()) {
       createScene(scene, engine); // createScene 함수 실행
@@ -589,6 +610,7 @@ function App() {
     window.addEventListener("resize", function () {
       engine.resize();
     });
+    // ifram 영역과 캔버스 영역 구분
     window.addEventListener("pointermove", (event) =>
       listener(event, scene, youtubeFocused)
     );

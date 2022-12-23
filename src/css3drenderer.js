@@ -27,7 +27,7 @@ export function setupRenderer() {
   return renderer;
 }
 
-export function createCSSobject(
+export function createCSSobjectYoutube(
   mesh,
   scene,
   videoID,
@@ -54,12 +54,12 @@ export function createCSSobject(
   iframe.style.height = height + "px";
   iframe.style.border = "0px";
   iframe.allow = "autoplay";
-  iframe.src = "https://www.babylonjs.com";
-  //   iframe.src = [
-  //     "https://www.youtube.com/embed/",
-  //     videoID,
-  //     "?rel=0&enablejsapi=1&disablekb=1&autoplay=1&controls=0&fs=0&modestbranding=1",
-  //   ].join("");
+  //   iframe.src = "https://www.babylonjs.com";
+  iframe.src = [
+    "https://www.youtube.com/embed/",
+    videoID,
+    "?rel=0&enablejsapi=1&disablekb=1&autoplay=1&controls=0&fs=0&modestbranding=1",
+  ].join("");
   div.appendChild(iframe);
   // Another new bit that toggles on/off pointer events to body
   div.addEventListener("mouseout", () => {
@@ -68,11 +68,45 @@ export function createCSSobject(
     document.getElementsByTagName("body")[0].style.pointerEvents = "auto";
   });
 
-  console.log(div, "===> css object");
+  //   console.log(div, "===> css object");
 
   return CSSobject;
 }
 
+export function createCSSobject(mesh, scene, id, renderer, youtubeFocused) {
+  let width = 480;
+  let height = 300;
+  scene.onBeforeRenderObservable.add(() => {
+    renderer.render(scene, scene.activeCamera);
+  });
+  var div = document.createElement("div");
+  div.style.width = width + "px";
+  div.style.height = height + "px";
+  div.style.backgroundColor = "#000";
+  var CSSobject = new CSS3DObject(div, scene);
+  CSSobject.position.copyFrom(mesh.getAbsolutePosition());
+  CSSobject.rotation.y = -mesh.rotation.y;
+  CSSobject.scaling.copyFrom(mesh.scaling);
+
+  var iframe = document.createElement("iframe");
+  iframe.id = "web-" + id;
+  iframe.style.width = width + "px";
+  iframe.style.height = height + "px";
+  iframe.style.border = "0px";
+  iframe.allow = "autoplay";
+  iframe.src = "https://www.babylonjs.com";
+  div.appendChild(iframe);
+  // Another new bit that toggles on/off pointer events to body
+  div.addEventListener("mouseout", () => {
+    youtubeFocused = false;
+    // console.log("CANVAS");
+    document.getElementsByTagName("body")[0].style.pointerEvents = "auto";
+  });
+
+  //   console.log(div, "===> css object");
+
+  return CSSobject;
+}
 class CSS3DObject extends Mesh {
   constructor(element, scene) {
     super();
