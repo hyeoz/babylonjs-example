@@ -1,4 +1,4 @@
-import { Camera, Matrix, Mesh, Scene, StandardMaterial } from "@babylonjs/core";
+import { Camera, Matrix, Mesh, Scene } from "@babylonjs/core";
 
 export function setupRenderer() {
   const prevContainer = document.getElementById("css-container");
@@ -8,7 +8,7 @@ export function setupRenderer() {
   container.style.position = "absolute";
   container.style.width = "100%";
   container.style.height = "100%";
-  container.style.zIndex = "-1"; // TODO zindex 를 높이면 화면이 보이는데 카메라 액션이 적용되지 않음..
+  container.style.zIndex = "-1";
 
   let canvasZone = document.getElementById("canvasZone");
   if (canvasZone) {
@@ -68,8 +68,6 @@ export function createCSSobjectYoutube(
     document.getElementsByTagName("body")[0].style.pointerEvents = "auto";
   });
 
-  //   console.log(div, "===> css object");
-
   return CSSobject;
 }
 
@@ -99,11 +97,8 @@ export function createCSSobject(mesh, scene, id, renderer, youtubeFocused) {
   // Another new bit that toggles on/off pointer events to body
   div.addEventListener("mouseout", () => {
     youtubeFocused = false;
-    // console.log("CANVAS");
     document.getElementsByTagName("body")[0].style.pointerEvents = "auto";
   });
-
-  //   console.log(div, "===> css object");
 
   return CSSobject;
 }

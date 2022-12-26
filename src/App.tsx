@@ -4,11 +4,9 @@ import {
   Animation,
   ArcRotateCamera,
   CannonJSPlugin,
-  CreateCylinder,
   CubeTexture,
   Engine,
   ExecuteCodeAction,
-  FreeCamera,
   HemisphericLight,
   Mesh,
   MeshBuilder,
@@ -17,8 +15,6 @@ import {
   SceneLoader,
   Sound,
   StandardMaterial,
-  Texture,
-  Tools,
   Vector3,
 } from "@babylonjs/core";
 import "./App.css";
@@ -104,7 +100,7 @@ function App() {
       // }
     );
 
-    // TODO iframe 적용
+    // NOTE iframe 적용
     const mat = new StandardMaterial("mat", scene);
     mat.alpha = 0.0;
     mat.needAlphaBlending = () => false;
@@ -205,7 +201,7 @@ function App() {
       }
     );
 
-    // 분리
+    // 코드 분리
     const { frameRate, hinge, wall1, wall2, wall3, wall4, wall5, wall6, door } =
       createBuilding(scene, engine);
 
@@ -587,7 +583,6 @@ function App() {
     if (pick.pickedMesh.name === "css_plane") {
       if (!youtubeFocused) {
         youtubeFocused = true;
-        // console.log("YOUTUBE");
       }
     }
 
@@ -599,9 +594,7 @@ function App() {
     }
   };
 
-  // modal?.style.display = 'none';
-
-  // react 로 작성시 scene 생성은 useffect 로 관리.
+  // NOTE react 로 작성시 scene 생성은 useffect 로 관리.
   useEffect(() => {
     const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
     const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
@@ -652,7 +645,6 @@ function App() {
   return (
     <div className="App">
       <Modal open={isVisible} onCancel={() => setIsVisible(false)}>
-        {/* <span id="modal-exit">X</span> */}
         <div>
           <iframe
             width={1280}
