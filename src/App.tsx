@@ -5,6 +5,7 @@ import {
   ArcRotateCamera,
   CannonJSPlugin,
   CubeTexture,
+  DefaultLoadingScreen,
   Engine,
   ExecuteCodeAction,
   HemisphericLight,
@@ -32,8 +33,33 @@ import { Modal } from "antd";
 
 var youtubeFocused = false;
 
+DefaultLoadingScreen.prototype.displayLoadingUI = () => {
+  // 로딩 UI 직접 작성
+  console.log("display loading ui works");
+
+  if (document.getElementById("loading")) {
+    document.getElementById("loading")!.style.display = "initial";
+    console.log("loading element ");
+    return;
+  }
+};
+DefaultLoadingScreen.prototype.hideLoadingUI = () => {
+  // 로딩 완료 직접 작성
+  console.log("hide loading ui works");
+  if (document.getElementById("loading")) {
+    document.getElementById("loading")!.style.display = "none";
+  } else {
+    return;
+  }
+};
+
 function App() {
   const [isVisible, setIsVisible] = useState(false);
+
+  var total1 = 0;
+  var loaded1 = 0;
+  var total2 = 0;
+  var loaded2 = 0;
 
   document.cookie = "safeCookie1=foo; SameSite=Lax";
   document.cookie = "safeCookie2=foo";
@@ -41,7 +67,41 @@ function App() {
 
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
 
+  // const customLoadingScreen = () => {
+  //   console.log('custom loading screen');
+  // }
+  // DefaultLoadingScreen.prototype.displayLoadingUI = () => {
+  //   // 로딩 UI 직접 작성
+  //   console.log("display loading ui works");
+
+  //   if (document.getElementById("loading")) {
+  //     document.getElementById("loading")!.style.display = "initial";
+  //     return;
+  //   }
+
+  //   const _loading = document.createElement("div");
+  //   _loading.id = "loading";
+  //   _loading.innerHTML = `
+  //     <p>SCENE IS CURRENTLY LOADING...</p>
+  //     <p id="loading-percentage">100</p>
+  // `;
+
+  //   document.body.appendChild(_loading);
+  // };
+  // DefaultLoadingScreen.prototype.hideLoadingUI = () => {
+  //   // 로딩 완료 직접 작성
+  //   console.log("hide loading ui works");
+  //   if (document.getElementById("loading")) {
+  //     document.getElementById("loading")!.style.display = "none";
+  //   } else {
+  //     return;
+  //   }
+  // };
+
   const createScene = function (scene: Scene, engine: Engine) {
+    // TODO loading test
+    engine.displayLoadingUI();
+
     // NOTE 카메라 생성. arc rotate camera 는 항상 대상 위치를 회전 중심으로 하여 해당 대상을 중심으로 회전할 수 있는 카메라.
     // name, alpha, beta, radius, target position, scene 을 매개변수로 받음
     const camera = new ArcRotateCamera(
@@ -192,12 +252,28 @@ function App() {
             scene.onPointerDown = (event, result) => {
               if (result.hit) {
                 console.log(result);
-                setIsVisible(true);
+                // setIsVisible(true);
               }
             };
           }
           // X-Frame-Option error 발생은 추후 사용하게 될 경우 서버쪽에 문의
         });
+      },
+      (event) => {
+        if (event.lengthComputable) {
+          // loadedPercentage = ((event.loaded * 100) / event.total).toFixed();
+          // total1 = event.total;
+          // loaded1 = event.loaded;
+        } else {
+          // console.log("2222", event);
+          // var dlCount = event.loaded / (1024 * 1024);
+          // loadedPercentage = (Math.floor(dlCount * 100.0) / 100.0).toFixed();
+          // percentage = Math.floor(dlCount * 100.0) / 100.0;
+        }
+        console.log("1111", total1, loaded1);
+        // document.getElementById(
+        //   "loading"
+        // )!.textContent = `${loadedPercentage}%1111`;
       }
     );
 
@@ -344,19 +420,18 @@ function App() {
     SceneLoader.ImportMesh(
       "",
       // "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-      "./", // 상대경로 기준은 public 폴더로 인식됨
-      // "https://raw.gㅇㅈithubusercontent.com/TrevorDev/gltfModels/master/",
-      // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      "shark.glb",
+      // "./", // 상대경로 기준은 public 폴더로 인식됨
+      // "https://raw.githubusercontent.com/TrevorDev/gltfModels/master/",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      // "shark.glb",
       // "weirdShape.glb",
-      // "MergedMouse.glb",
+      "MergedMouse.glb",
       scene,
       (newMeshes) => {
-        // console.log(newMeshes);
         let character = newMeshes[0];
 
         // 캐릭터 크기, 위치 등 조절
-        character.scaling.scaleInPlace(0.1);
+        character.scaling.scaleInPlace(1);
         // character.rotation.y = Math.PI / 2;
 
         const characters = character.getChildMeshes()[0];
@@ -364,7 +439,7 @@ function App() {
         characters.setParent(null);
         character.dispose();
 
-        characters.position.y = 1;
+        characters.position.y = 0.5;
         characters.position.z = 0;
         //   Lock camera on the character
         (scene.activeCamera as ArcRotateCamera).target =
@@ -410,8 +485,8 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
             // shift 함께 누르는 경우 빠르게 이동
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(characterSpeed * 2)
-              // characters.up.scaleInPlace(characterSpeed * 2)
+              // characters.forward.scaleInPlace(characterSpeed * 2)
+              characters.up.scaleInPlace(characterSpeed * 2)
             );
             keydown = true;
           }
@@ -419,26 +494,26 @@ function App() {
           if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
             // 일반 직진
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(characterSpeed)
-              // characters.up.scaleInPlace(characterSpeed)
+              // characters.forward.scaleInPlace(characterSpeed)
+              characters.up.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
           if (inputMap["s"] || inputMap["ㄴ"]) {
             characters.moveWithCollisions(
-              characters.forward.scaleInPlace(-characterSpeedBack)
-              // characters.up.scaleInPlace(-characterSpeedBack)
+              // characters.forward.scaleInPlace(-characterSpeedBack)
+              characters.up.scaleInPlace(-characterSpeedBack)
             );
             keydown = true;
           }
           if (inputMap["a"] || inputMap["ㅁ"]) {
-            characters.rotate(Vector3.Up(), characterRotationSpeed);
-            // characters.rotate(Vector3.Backward(), -characterRotationSpeed);
+            // characters.rotate(Vector3.Up(), characterRotationSpeed);
+            characters.rotate(Vector3.Backward(), -characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["d"] || inputMap["ㅇ"]) {
-            characters.rotate(Vector3.Down(), characterRotationSpeed);
-            // characters.rotate(Vector3.Backward(), characterRotationSpeed);
+            // characters.rotate(Vector3.Down(), characterRotationSpeed);
+            characters.rotate(Vector3.Backward(), characterRotationSpeed);
             keydown = true;
           }
           if (inputMap["b"] || inputMap["ㅠ"]) {
@@ -446,8 +521,8 @@ function App() {
           }
           if (inputMap["q"] || inputMap["ㅂ"]) {
             characters.moveWithCollisions(
-              characters.up.scaleInPlace(characterSpeed)
-              // characters.forward.scaleInPlace(characterSpeed)
+              // characters.up.scaleInPlace(characterSpeed)
+              characters.forward.scaleInPlace(characterSpeed)
             );
             keydown = true;
           }
@@ -459,7 +534,7 @@ function App() {
               // 애니메이션 실행되고 있는지 여부 확인
               animating = true;
               if (inputMap["w"]) {
-                // 후진
+                // 직진
                 // walkBackAnimation?.start(
                 //   true,
                 //   1.0,
@@ -534,6 +609,66 @@ function App() {
           // console.log(door.intersectsMesh(characters));
           doorStatus = door.intersectsMesh(characters);
         });
+        engine.hideLoadingUI();
+      },
+      (event) => {
+        if (event.lengthComputable) {
+          // loadedPercentage = ((event.loaded * 100) / event.total).toFixed();
+          total2 = event.total;
+          loaded2 = event.loaded;
+        } else {
+          // console.log("2222", event);
+          // var dlCount = event.loaded / (1024 * 1024); // mb
+          // loadedPercentage = (Math.floor(dlCount * 100.0) / 100).toFixed();
+          // percentage += Math.floor(dlCount);
+        }
+        console.log("2222", loaded2, total2);
+        var percentage = ((loaded1 + loaded2) / (total1 + total2)) * 100;
+        document.getElementById(
+          "loading"
+        )!.textContent = `${percentage.toFixed()}%`;
+        console.log(percentage, "===> percentage");
+        console.time("100%");
+      }
+    );
+
+    SceneLoader.ImportMesh(
+      "",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      "MergedMouse.glb",
+      scene,
+      (meshes) => {
+        meshes[0].position.z = 1;
+      },
+      (event) => {
+        console.log("33333");
+      }
+    );
+
+    SceneLoader.ImportMesh(
+      "",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      "MergedMouse.glb",
+      scene,
+      (meshes) => {
+        meshes[0].position.z = 2;
+      },
+      (event) => {
+        console.log("44444");
+      }
+    );
+
+    SceneLoader.ImportMesh(
+      "",
+      "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+      "MergedMouse.glb",
+      scene,
+      (meshes) => {
+        meshes[0].position.z = -1;
+        console.timeEnd("100%");
+      },
+      (event) => {
+        console.log("55555");
       }
     );
 
@@ -598,6 +733,7 @@ function App() {
   useEffect(() => {
     const engine = new Engine(canvas, true); // NOTE BABYLON 3D engine 생성 -> babylon 은 engine 이 필요
     const scene = new Scene(engine); // NOTE 장면 생성. 엔진을 인수로 넘겨줌
+    console.log(scene.isLoading);
 
     if (scene.isReady()) {
       createScene(scene, engine); // createScene 함수 실행
