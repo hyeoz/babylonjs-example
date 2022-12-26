@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ActionManager,
   Animation,
@@ -32,10 +32,13 @@ import {
   createCSSobjectYoutube,
   setupRenderer,
 } from "./css3drenderer";
+import { Modal } from "antd";
 
 var youtubeFocused = false;
 
 function App() {
+  const [isVisible, setIsVisible] = useState(false);
+
   document.cookie = "safeCookie1=foo; SameSite=Lax";
   document.cookie = "safeCookie2=foo";
   document.cookie = "crossCookie=bar; SameSite=None; Secure";
@@ -86,10 +89,6 @@ function App() {
     // ); // babylonjs 에서 제공하는 texture
     // groundMaterial.diffuseTexture = groundTexture;
 
-    // TODO 모달에 iframe 생성
-    const modal = document.getElementById("modal");
-    console.log(modal);
-
     // NOTE 사운드 실행
     new Sound(
       "sound",
@@ -127,11 +126,12 @@ function App() {
     plane.rotation.y = -Math.PI / 2;
 
     // css object 렌더링
-    // let existingRenderer = document.getElementById("css-container");
-    // if (existingRenderer) existingRenderer.remove();
+    let existingRenderer = document.getElementById("css-container");
+    if (existingRenderer) existingRenderer.remove();
     let renderer = setupRenderer();
     createCSSobject(plane, scene, "babylonjs", renderer, youtubeFocused);
 
+    // TODO 여러개의 iframe 구현 아직
     // youtube
     // const plane2 = MeshBuilder.CreatePlane(
     //   "css_plane2",
@@ -179,18 +179,29 @@ function App() {
         mesh.checkCollisions = true;
 
         mesh.getChildMeshes().forEach((m) => {
-          if (m.name.indexOf("tree") === -1 || m.name.indexOf("rock") === -1) {
-            // const _m = m.getChildMeshes()[0];
-            m?.setParent(null);
-            m.physicsImpostor = new PhysicsImpostor(
-              m,
-              PhysicsImpostor.BoxImpostor,
-              { mass: 0, restitution: 0.5, friction: 0.5 },
-              scene
-            );
+          // mesh 의 모든 객체에 물리엔진 적용
+          m?.setParent(null);
+          m.physicsImpostor = new PhysicsImpostor(
+            m,
+            PhysicsImpostor.BoxImpostor,
+            { mass: 0, restitution: 0.5, friction: 0.5 },
+            scene
+          );
+          // console.log(m.name);
+          // NOTE 모달에 iframe 생성
+          // 특정 객체에 클릭 이벤트 추가
+          if (m.name.indexOf("tree") !== -1 || m.name.indexOf("rock") !== -1) {
+            m.isPickable = true;
+            // 특정 객체에서 특정 액션(클릭)에 모달 오픈
+            scene.onPointerDown = (event, result) => {
+              if (result.hit) {
+                console.log(result);
+                setIsVisible(true);
+              }
+            };
           }
+          // X-Frame-Option error 발생은 추후 사용하게 될 경우 서버쪽에 문의
         });
-        // console.log(mesh.position);
       }
     );
 
@@ -638,7 +649,22 @@ function App() {
     };
   }, []);
 
-  return <div className="App"></div>;
+  return (
+    <div className="App">
+      <Modal open={isVisible} onCancel={() => setIsVisible(false)}>
+        {/* <span id="modal-exit">X</span> */}
+        <div>
+          <iframe
+            width={1280}
+            height={960}
+            src="https://youtube.com/embed/VwANX7CvF8I"
+            id="modal-iframe"
+          />
+          <h1 style={{ color: "white" }}>TEST</h1>
+        </div>
+      </Modal>
+    </div>
+  );
 }
 
 export default App;
