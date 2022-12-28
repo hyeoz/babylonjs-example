@@ -99,7 +99,7 @@ function App() {
   };
 
   // TODO multiplaying
-  const client = new Client(`ws://localhost:2567`);
+  const client = new Client("wss://80d7-211-104-98-111.jp.ngrok.io");
 
   const createScene = function (scene: Scene, engine: Engine) {
     // NOTE loading 화면으로 먼저 scene 그리기
@@ -633,15 +633,16 @@ function App() {
           const sessionId = key;
           console.log("ON ADD");
 
-          // SceneLoader.ImportMesh( // FIXME
+          // SceneLoader.ImportMesh(
+          //   // FIXME
           //   "",
           //   "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-          //   "shark.glb",
+          //   "alien.glb",
           //   scene,
           //   (meshes) => {
           //     console.log("ON SUCCESS");
           //     const _mesh = meshes[0];
-          //     _mesh.scaling.scaleInPlace(0.1);
+          //     _mesh.scaling.scaleInPlace(1);
           //     playerViews[key] = _mesh;
           //   },
           //   (event) => {
