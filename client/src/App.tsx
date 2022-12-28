@@ -629,31 +629,39 @@ function App() {
 
         const playerViews: { [id: string]: AbstractMesh } = {};
 
-        room.state.players.onAdd = (player, key) => {
+        room.state.players.onAdd = async (player, key) => {
           const sessionId = key;
           console.log("ON ADD");
 
-          // SceneLoader.ImportMesh(
-          //   // FIXME
-          //   "",
-          //   "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-          //   "alien.glb",
-          //   scene,
-          //   (meshes) => {
-          //     console.log("ON SUCCESS");
-          //     const _mesh = meshes[0];
-          //     _mesh.scaling.scaleInPlace(1);
-          //     playerViews[key] = _mesh;
-          //   },
-          //   (event) => {
-          //     console.log("ON PROCESS");
-          //   }
-          // );
+          await SceneLoader.ImportMeshAsync(
+            // FIXME
+            "",
+            "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+            "HVGirl.glb",
+            scene
+          ).then(
+            (meshes) => {
+              console.log("ON SUCCESS", meshes);
+              const _mesh = meshes.meshes[0];
+              _mesh.scaling.scaleInPlace(0.1);
+              // _mesh.physicsImpostor = new PhysicsImpostor(
+              //   _mesh,
+              //   PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
+              //   { mass: 1, restitution: 0.4 },
+              //   scene
+              // );
+              playerViews[key] = _mesh;
+            }
+            // ,
+            // (event) => {
+            //   console.log("ON PROCESS");
+            // }
+          );
 
-          const _mesh = MeshBuilder.CreateSphere("Sphere", {
-            diameter: 2,
-          });
-          playerViews[key] = _mesh;
+          // const _mesh = MeshBuilder.CreateSphere("Sphere", {
+          //   diameter: 2,
+          // });
+          // playerViews[key] = _mesh;
 
           playerViews[key].position = new Vector3(
             player.position.x,
@@ -671,6 +679,7 @@ function App() {
           // if (key === room.sessionId) {
           //   camera.setTarget(playerViews[key].position);
           // }
+          console.log(playerViews);
         };
 
         room.state.players.onRemove = function (player, key) {
