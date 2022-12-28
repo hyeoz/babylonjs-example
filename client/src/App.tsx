@@ -5,6 +5,7 @@ import {
   Animation,
   ArcRotateCamera,
   CannonJSPlugin,
+  Color3,
   CubeTexture,
   DefaultLoadingScreen,
   Engine,
@@ -99,7 +100,12 @@ function App() {
   };
 
   // TODO multiplaying
-  const client = new Client("wss://80d7-211-104-98-111.jp.ngrok.io");
+  // const client = new Client("wss://80d7-211-104-98-111.jp.ngrok.io");
+  const client = new Client(
+    `${window.location.protocol.replace("http", "ws")}//${
+      window.location.hostname
+    }:2567`
+  );
 
   const createScene = function (scene: Scene, engine: Engine) {
     // NOTE loading 화면으로 먼저 scene 그리기
@@ -139,7 +145,6 @@ function App() {
       { width: 30, height: 30, subdivisions: 2 },
       scene
     );
-    ground.isVisible = false;
     // let groundMaterial = new StandardMaterial("Ground Material", scene);
     // ground.material = groundMaterial;
     // const groundTexture = new Texture(
@@ -226,6 +231,14 @@ function App() {
     const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
     scene.enablePhysics(gravityVector, physicsPlugin);
 
+    ground.physicsImpostor = new PhysicsImpostor(
+      ground,
+      PhysicsImpostor.HeightmapImpostor,
+      { mass: 0 },
+      scene
+    );
+    // ground.isVisible = false;
+
     // NOTE 블렌더에서 ground 가져오기
     SceneLoader.ImportMesh(
       "",
@@ -246,7 +259,7 @@ function App() {
             { mass: 0, restitution: 0.5, friction: 0.5 },
             scene
           );
-          // console.log(m.name);
+          console.log(m.name, m.physicsImpostor);
 
           // ANCHOR 모달에 iframe 생성
           m.isPickable = false;
@@ -636,32 +649,40 @@ function App() {
           await SceneLoader.ImportMeshAsync(
             // FIXME
             "",
-            "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-            "HVGirl.glb",
+            "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+            "MergedMouse.glb",
             scene
-          ).then(
-            (meshes) => {
-              console.log("ON SUCCESS", meshes);
-              const _mesh = meshes.meshes[0];
-              _mesh.scaling.scaleInPlace(0.1);
-              // _mesh.physicsImpostor = new PhysicsImpostor(
-              //   _mesh,
-              //   PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
-              //   { mass: 1, restitution: 0.4 },
-              //   scene
-              // );
-              playerViews[key] = _mesh;
-            }
-            // ,
-            // (event) => {
-            //   console.log("ON PROCESS");
-            // }
-          );
+          ).then((meshes) => {
+            console.log("ON SUCCESS", meshes);
+            const _mesh = meshes.meshes[0];
+            _mesh.scaling.scaleInPlace(1);
+            _mesh.physicsImpostor = new PhysicsImpostor(
+              _mesh,
+              PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
+              { mass: 1, restitution: 0.4 },
+              scene
+            );
+            playerViews[key] = _mesh;
+          });
 
           // const _mesh = MeshBuilder.CreateSphere("Sphere", {
           //   diameter: 2,
           // });
+          // if (key === room.sessionId) {
+          //   const material = new StandardMaterial("mat", scene);
+          //   material.alpha = 1;
+          //   material.diffuseColor = new Color3(1.0, 0.2, 0.7);
+          //   _mesh.material = material; // <--
+          // }
+
           // playerViews[key] = _mesh;
+
+          // playerViews[key].physicsImpostor = new PhysicsImpostor(
+          //   playerViews[key],
+          //   PhysicsImpostor.BoxImpostor,
+          //   { mass: 1 },
+          //   scene
+          // );
 
           playerViews[key].position = new Vector3(
             player.position.x,
@@ -671,7 +692,7 @@ function App() {
           player.position.onChange = () => {
             playerViews[key].position.set(
               player.position.x,
-              player.position.y,
+              player.position.y + 10,
               player.position.z
             );
           };
@@ -695,25 +716,25 @@ function App() {
         const keyDownEvent = (e: KeyboardEvent) => {
           // console.log(e);
           if (e.key === "s") {
-            keyboard.x = -1;
-          } else if (e.key === "w") {
-            keyboard.x = 1;
-          } else if (e.key === "a") {
-            keyboard.y = -1;
-          } else if (e.key === "d") {
             keyboard.y = 1;
+          } else if (e.key === "w") {
+            keyboard.y = -1;
+          } else if (e.key === "a") {
+            keyboard.x = -1;
+          } else if (e.key === "d") {
+            keyboard.x = 1;
           }
           room.send("key", keyboard);
         };
         const keyUpEvent = (e: KeyboardEvent) => {
           if (e.key === "s") {
-            keyboard.x = 0;
+            keyboard.y = 0;
           } else if (e.key === "w") {
-            keyboard.x = 0;
+            keyboard.y = 0;
           } else if (e.key === "a") {
-            keyboard.y = 0;
+            keyboard.x = 0;
           } else if (e.key === "d") {
-            keyboard.y = 0;
+            keyboard.x = 0;
           }
           room.send("key", keyboard);
         };
