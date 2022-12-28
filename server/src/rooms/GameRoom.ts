@@ -1,7 +1,8 @@
-import { Room, Client } from "colyseus";
+import { Room, Client, ISendOptions } from "colyseus";
 
 import { StateHandler } from "./StateHandler";
-import { Player } from "../entities/Players";
+import { Player, PressedKeys } from "../entities/Players";
+import { Schema } from "@colyseus/schema";
 
 export class GameRoom extends Room<StateHandler> {
   maxClients = 8;
@@ -16,6 +17,8 @@ export class GameRoom extends Room<StateHandler> {
   }
 
   onJoin(client) {
+    console.log(client.sessionId, "===> JOINED!");
+
     const player = new Player();
     player.name = `Player ${this.clients.length}`;
     player.position.x = Math.random();
@@ -27,12 +30,15 @@ export class GameRoom extends Room<StateHandler> {
 
   onUpdate() {
     this.state.players.forEach((player, sessionId) => {
-      player.position.x += player.pressedKeys.x * 0.1;
-      player.position.z -= player.pressedKeys.y * 0.1;
+      // console.log(sessionId);
+
+      player.position.x += player.pressedKeys.x * 1;
+      player.position.z -= player.pressedKeys.y * 1;
     });
   }
 
   onLeave(client: Client) {
+    console.log(client.sessionId, "===> LEAVED!");
     this.state.players.delete(client.sessionId);
   }
 

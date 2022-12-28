@@ -12,7 +12,7 @@ export class Position extends Schema {
 }
 
 export class Player extends Schema {
-  @type("string") name: string;
+  @type("string") name: string = "";
   @type(Position) position = new Position();
 
   pressedKeys: PressedKeys = { x: 0, y: 0 };

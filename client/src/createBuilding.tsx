@@ -80,26 +80,26 @@ export default function createBuilding(scene: Scene, engine: Engine) {
   wall6.material = wallMaterial;
 
   // 자붕 생성
-  const roof = CreateCylinder("roof", {
-    // cylinder = 기둥
-    diameter: 1.5, // 직경
-    height: 1.5, // 높이
-    tessellation: 3, // tessellation: 타일이라고 하는 도형들로 겹치지 않으면서 빈틈없게 공간을 채우는 것. 해당 메서드에서는 기둥의 밑면의 각을 의미함(원기둥인 경우 0, 삼각기둥인 경우 3)
-  });
-  const roofMaterial = new StandardMaterial("Roof Material");
-  const roofTexture = new Texture(
-    "https://assets.babylonjs.com/environments/roof.jpg"
-  );
-  roofMaterial.diffuseTexture = roofTexture;
+  // const roof = CreateCylinder("roof", {
+  //   // cylinder = 기둥
+  //   diameter: 1.5, // 직경
+  //   height: 1.5, // 높이
+  //   tessellation: 3, // tessellation: 타일이라고 하는 도형들로 겹치지 않으면서 빈틈없게 공간을 채우는 것. 해당 메서드에서는 기둥의 밑면의 각을 의미함(원기둥인 경우 0, 삼각기둥인 경우 3)
+  // });
+  // const roofMaterial = new StandardMaterial("Roof Material");
+  // const roofTexture = new Texture(
+  //   "https://assets.babylonjs.com/environments/roof.jpg"
+  // );
+  // roofMaterial.diffuseTexture = roofTexture;
 
-  roof.material = roofMaterial;
-  roof.scaling.x = 4;
-  roof.scaling.y = 8;
-  roof.scaling.z = 6;
-  roof.position.x = -1;
-  roof.position.y = 7.5;
-  roof.position.z = 3.5;
-  roof.rotation.z = Tools.ToRadians(90);
+  // roof.material = roofMaterial;
+  // roof.scaling.x = 4;
+  // roof.scaling.y = 8;
+  // roof.scaling.z = 6;
+  // roof.position.x = -1;
+  // roof.position.y = 7.5;
+  // roof.position.z = 3.5;
+  // roof.rotation.z = Tools.ToRadians(90);
 
   //   const board = MeshBuilder.CreateBox(
   //     "board",

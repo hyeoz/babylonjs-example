@@ -6,7 +6,7 @@ import { Server } from "colyseus";
 
 import { GameRoom } from "./rooms/GameRoom";
 
-export const port = process.env.PORT || 2657;
+export const port = process.env.PORT || 2567;
 
 const app = express();
 
