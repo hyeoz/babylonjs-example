@@ -504,15 +504,37 @@ function App() {
         room.state.players.onAdd = async (player, key) => {
           console.log("ON ADD");
 
+          // TODO attach to bone
+          const hatMesh = await SceneLoader.ImportMeshAsync(
+            "",
+            "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+            "hat2.glb",
+            scene
+          );
+
           await SceneLoader.ImportMeshAsync(
-            // FIXME
             "",
             "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
             "MergedMouse.glb",
             scene
-          ).then((meshes) => {
-            console.log("ON SUCCESS", meshes);
-            const _mesh = meshes.meshes[0];
+          ).then((result) => {
+            const _mesh = result.meshes[0];
+            const skeleton = result.meshes[1].skeleton;
+
+            console.log("ON SUCCESS");
+
+            if (skeleton) {
+              console.log(
+                skeleton?.bones.filter((b) => b.name.indexOf("Head") !== -1)[0],
+                "=====>>>>>"
+              );
+
+              hatMesh.meshes[0].attachToBone(
+                skeleton?.bones.filter((b) => b.name.indexOf("Head") !== -1)[0],
+                _mesh
+              );
+            }
+
             _mesh.scaling.scaleInPlace(1);
             _mesh.physicsImpostor = new PhysicsImpostor(
               _mesh,
