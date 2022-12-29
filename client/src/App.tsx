@@ -59,6 +59,14 @@ DefaultLoadingScreen.prototype.hideLoadingUI = () => {
 
 const keyboard: PressedKeys = { x: 0, y: 0 };
 
+// NOTE multiplaying
+// const client = new Client("wss://80d7-211-104-98-111.jp.ngrok.io");
+const client = new Client(
+  `${window.location.protocol.replace("http", "ws")}//${
+    window.location.hostname
+  }:2567`
+);
+
 function App() {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -98,14 +106,6 @@ function App() {
       return;
     }
   };
-
-  // TODO multiplaying
-  // const client = new Client("wss://80d7-211-104-98-111.jp.ngrok.io");
-  const client = new Client(
-    `${window.location.protocol.replace("http", "ws")}//${
-      window.location.hostname
-    }:2567`
-  );
 
   const createScene = function (scene: Scene, engine: Engine) {
     // NOTE loading 화면으로 먼저 scene 그리기
@@ -222,22 +222,23 @@ function App() {
     //   youtubeFocused
     // );
 
-    scene.collisionsEnabled = true;
-    ground.checkCollisions = true;
-    camera.checkCollisions = true;
-
     // NOTE 물리엔진 적용 - cannon
     const gravityVector = new Vector3(0, -9.81, 0); // -y 방향으로 지구 중력 약 9.81 만큼 적용
     const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
     scene.enablePhysics(gravityVector, physicsPlugin);
 
+    // ANCHOR ground 에 plane impostor 적용한 뒤 숨김처리
     ground.physicsImpostor = new PhysicsImpostor(
       ground,
-      PhysicsImpostor.HeightmapImpostor,
+      PhysicsImpostor.PlaneImpostor,
       { mass: 0 },
       scene
     );
-    // ground.isVisible = false;
+    ground.isVisible = false;
+
+    scene.collisionsEnabled = true;
+    ground.checkCollisions = true;
+    camera.checkCollisions = true;
 
     // NOTE 블렌더에서 ground 가져오기
     SceneLoader.ImportMesh(
@@ -246,6 +247,7 @@ function App() {
       "customground.glb",
       scene,
       (meshes) => {
+        // on success
         const mesh = meshes[0];
         mesh.scaling = new Vector3(15, 15, 15);
         mesh.checkCollisions = true;
@@ -259,7 +261,7 @@ function App() {
             { mass: 0, restitution: 0.5, friction: 0.5 },
             scene
           );
-          console.log(m.name, m.physicsImpostor);
+          m.checkCollisions = true;
 
           // ANCHOR 모달에 iframe 생성
           m.isPickable = false;
@@ -279,6 +281,7 @@ function App() {
         engine.hideLoadingUI();
       },
       (event) => {
+        // on process
         if (event.lengthComputable) {
           total2 = event.total;
           loaded2 = event.loaded;
@@ -455,184 +458,9 @@ function App() {
     const characterSpeedBack = 0.01;
     const characterRotationSpeed = 0.1;
 
-    var keydown = false;
-
     // NOTE 캐릭터 렌더링
-    // SceneLoader.ImportMesh(
-    //   "",
-    //   // "./", // 상대경로 기준은 public 폴더로 인식됨
-    //   "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-    //   // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-    //   "shark.glb",
-    //   // "weirdShape.glb",
-    //   // "MergedMouse.glb",
-    //   scene,
-    //   (newMeshes) => {
-    //     let character = newMeshes[0];
-    //     // 캐릭터 크기, 위치 등 조절
-    //     character.scaling.scaleInPlace(0.1);
-    //     // character.rotation.y = Math.PI / 2;
-
-    //     const characters = character.getChildMeshes()[0];
-
-    //     characters.setParent(null);
-    //     character.dispose();
-
-    //     characters.position.y = 1;
-    //     characters.position.z = -5;
-    //     //   Lock camera on the character
-    //     (scene.activeCamera as FreeCamera).target = characters.absolutePosition;
-
-    //     scene.onBeforeRenderObservable.add(() => {
-    //       // 내가 움직이는 화면
-    //       var keydown = false;
-    //       // console.log(inputMap);
-
-    //       // 각 키의 움직임에 대한 정의(위치, 회전)
-    //       if ((inputMap["w"] || inputMap["ㅈ"]) && inputMap["Shift"]) {
-    //         // shift 함께 누르는 경우 빠르게 이동
-    //         characters.moveWithCollisions(
-    //           // characters.forward.scaleInPlace(characterSpeed * 2)
-    //           characters.up.scaleInPlace(characterSpeed * 2)
-    //         );
-    //         keydown = true;
-    //       }
-    //       // NOTE babylonjs 에서는 y 축이 수직, blender 에서는 z 축이 수직이기 때문에 비정상적으로 작동하는 경우 수정이 필요.
-    //       if ((inputMap["w"] || inputMap["ㅈ"]) && !inputMap["Shift"]) {
-    //         // 일반 직진
-    //         characters.moveWithCollisions(
-    //           characters.forward.scaleInPlace(characterSpeed)
-    //           // characters.up.scaleInPlace(characterSpeed)
-    //         );
-    //         keydown = true;
-    //       }
-    //       if (inputMap["s"] || inputMap["ㄴ"]) {
-    //         characters.moveWithCollisions(
-    //           characters.forward.scaleInPlace(-characterSpeedBack)
-    //           // characters.up.scaleInPlace(-characterSpeedBack)
-    //         );
-    //         keydown = true;
-    //       }
-    //       if (inputMap["a"] || inputMap["ㅁ"]) {
-    //         characters.rotate(Vector3.Up(), characterRotationSpeed);
-    //         // characters.rotate(
-    //         //   Vector3.Backward(),
-    //         //   -characterRotationSpeed
-    //         // );
-    //         keydown = true;
-    //       }
-    //       if (inputMap["d"] || inputMap["ㅇ"]) {
-    //         characters.rotate(Vector3.Down(), characterRotationSpeed);
-    //         // characters.rotate(Vector3.Backward(), characterRotationSpeed);
-    //         keydown = true;
-    //       }
-    //       if (inputMap["b"] || inputMap["ㅠ"]) {
-    //         keydown = true;
-    //       }
-    //       if (inputMap["q"] || inputMap["ㅂ"]) {
-    //         characters.moveWithCollisions(
-    //           characters.up.scaleInPlace(characterSpeed)
-    //           // characters.forward.scaleInPlace(characterSpeed)
-    //         );
-    //         keydown = true;
-    //       }
-    //     });
-
-    //     // 캐릭터 애니메이션
-    //     // const walkAnimation = scene.getAnimationGroupByName("Walking");
-    //     // const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
-    //     // const idleAnimation = scene.getAnimationGroupByName("Idle");
-    //     // const sambaAnimation = scene.getAnimationGroupByName("Samba");
-    //     const idleAnimation = scene.getAnimationGroupByName("Idle");
-    //     const rumbaAnimation = scene.getAnimationGroupByName("Rumba");
-    //     const swimmingAnimation = scene.getAnimationGroupByName("Swimming");
-
-    //     var animating = true;
-
-    //     // 애니메이션에 대한 정의
-    //     if (keydown) {
-    //       // 키 눌림 감지된 경우
-    //       if (!animating) {
-    //         // 애니메이션 실행되고 있는지 여부 확인
-    //         animating = true;
-    //         if (inputMap["w"]) {
-    //           // 직진
-    //           // walkBackAnimation?.start(
-    //           //   true,
-    //           //   1.0,
-    //           //   walkBackAnimation?.from,
-    //           //   walkBackAnimation?.to,
-    //           //   false
-    //           // );
-    //           swimmingAnimation?.start(
-    //             true,
-    //             1.0,
-    //             swimmingAnimation.from,
-    //             swimmingAnimation.to,
-    //             false
-    //           );
-    //         } else if (inputMap["b"] || inputMap["ㅠ"]) {
-    //           // 삼바
-    //           rumbaAnimation?.start(
-    //             true,
-    //             1.0,
-    //             rumbaAnimation.from,
-    //             rumbaAnimation.to,
-    //             false
-    //           );
-    //         } else {
-    //           // 직진, 우회전, 좌회전 (같은 애니메이션 사용)
-    //           // walkAnimation?.start(
-    //           //   true,
-    //           //   1.0,
-    //           //   walkAnimation.from,
-    //           //   walkAnimation.to,
-    //           //   false
-    //           // );
-    //         }
-    //       }
-    //     } else {
-    //       // 키 눌려있지 않은 경우
-    //       if (animating) {
-    //         // 애니메이션 실행되고 있는지 여부 확인
-    //         // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
-    //         rumbaAnimation?.stop();
-    //         swimmingAnimation?.stop();
-    //         // walkAnimation?.stop();
-    //         // walkBackAnimation?.stop();
-
-    //         // 기본 애니메이션 실행
-    //         idleAnimation?.start(
-    //           true,
-    //           1.0,
-    //           idleAnimation.from,
-    //           idleAnimation.to,
-    //           false
-    //         );
-
-    //         animating = false;
-    //       }
-    //     }
-    //     // soundEffect.setPosition(characters.position);
-    //     // soundEffect.attachToMesh(characters);
-
-    //     characters.physicsImpostor = new PhysicsImpostor(
-    //       characters,
-    //       PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
-    //       { mass: 2, restitution: 0.4 },
-    //       scene
-    //     );
-
-    //     characters.position.z = -5;
-
-    //     // NOTE Collide 로 상호작용 or intersectMesh 로 상호작용
-    //     scene.registerBeforeRender(() => {
-    //       // console.log(door.intersectsMesh(characters));
-    //       doorStatus = door.intersectsMesh(characters);
-    //     });
-    //     engine.hideLoadingUI();
-    //   }
-    // );
+    var keydown = false;
+    var animating = false;
 
     // TODO multi player
     client
@@ -642,79 +470,9 @@ function App() {
 
         const playerViews: { [id: string]: AbstractMesh } = {};
 
-        room.state.players.onAdd = async (player, key) => {
-          const sessionId = key;
-          console.log("ON ADD");
-
-          await SceneLoader.ImportMeshAsync(
-            // FIXME
-            "",
-            "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-            "MergedMouse.glb",
-            scene
-          ).then((meshes) => {
-            console.log("ON SUCCESS", meshes);
-            const _mesh = meshes.meshes[0];
-            _mesh.scaling.scaleInPlace(1);
-            _mesh.physicsImpostor = new PhysicsImpostor(
-              _mesh,
-              PhysicsImpostor.BoxImpostor, // meshImpostor 는 sphereImpostor 만 collide 할 수 있음
-              { mass: 1, restitution: 0.4 },
-              scene
-            );
-            playerViews[key] = _mesh;
-          });
-
-          // const _mesh = MeshBuilder.CreateSphere("Sphere", {
-          //   diameter: 2,
-          // });
-          // if (key === room.sessionId) {
-          //   const material = new StandardMaterial("mat", scene);
-          //   material.alpha = 1;
-          //   material.diffuseColor = new Color3(1.0, 0.2, 0.7);
-          //   _mesh.material = material; // <--
-          // }
-
-          // playerViews[key] = _mesh;
-
-          // playerViews[key].physicsImpostor = new PhysicsImpostor(
-          //   playerViews[key],
-          //   PhysicsImpostor.BoxImpostor,
-          //   { mass: 1 },
-          //   scene
-          // );
-
-          playerViews[key].position = new Vector3(
-            player.position.x,
-            player.position.y,
-            player.position.z
-          );
-          player.position.onChange = () => {
-            playerViews[key].position.set(
-              player.position.x,
-              player.position.y + 10,
-              player.position.z
-            );
-          };
-          // Set camera to follow current player
-          // if (key === room.sessionId) {
-          //   camera.setTarget(playerViews[key].position);
-          // }
-          console.log(playerViews);
-        };
-
-        room.state.players.onRemove = function (player, key) {
-          scene.removeMesh(playerViews[key]);
-          delete playerViews[key];
-        };
-
-        room.onStateChange((state) => {
-          console.log("New room state:", state.toJSON());
-        });
-
         // ANCHOR Keyboard listeners -> send 부분이 서버와 클라이언트 연결
         const keyDownEvent = (e: KeyboardEvent) => {
-          // console.log(e);
+          keydown = true;
           if (e.key === "s") {
             keyboard.y = 1;
           } else if (e.key === "w") {
@@ -727,6 +485,7 @@ function App() {
           room.send("key", keyboard);
         };
         const keyUpEvent = (e: KeyboardEvent) => {
+          keydown = false;
           if (e.key === "s") {
             keyboard.y = 0;
           } else if (e.key === "w") {
@@ -741,6 +500,159 @@ function App() {
 
         window.addEventListener("keydown", keyDownEvent);
         window.addEventListener("keyup", keyUpEvent);
+
+        room.state.players.onAdd = async (player, key) => {
+          console.log("ON ADD");
+
+          await SceneLoader.ImportMeshAsync(
+            // FIXME
+            "",
+            "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+            "MergedMouse.glb",
+            scene
+          ).then((meshes) => {
+            console.log("ON SUCCESS", meshes);
+            const _mesh = meshes.meshes[0];
+            _mesh.scaling.scaleInPlace(1);
+            _mesh.physicsImpostor = new PhysicsImpostor(
+              _mesh,
+              PhysicsImpostor.SphereImpostor,
+              { mass: 0.5, restitution: 0.4 },
+              scene
+            );
+            _mesh.checkCollisions = true;
+
+            scene.registerBeforeRender(() => {
+              // console.log(door.intersectsMesh(characters));
+              doorStatus = door.intersectsMesh(_mesh);
+
+              // 캐릭터 애니메이션
+              // const walkAnimation = scene.getAnimationGroupByName("Walking");
+              // const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
+              // const idleAnimation = scene.getAnimationGroupByName("Idle");
+              // const sambaAnimation = scene.getAnimationGroupByName("Samba");
+              const idleAnimation = scene.getAnimationGroupByName("Idle");
+              const rumbaAnimation = scene.getAnimationGroupByName("Rumba");
+              const swimmingAnimation =
+                scene.getAnimationGroupByName("Swimming");
+
+              // 애니메이션에 대한 정의
+              if (keydown) {
+                // 키 눌림 감지된 경우
+                if (!animating) {
+                  // 애니메이션 실행되고 있는지 여부 확인
+                  animating = true;
+
+                  if (inputMap["w"]) {
+                    // 직진
+                    // walkBackAnimation?.start(
+                    //   true,
+                    //   1.0,
+                    //   walkBackAnimation?.from,
+                    //   walkBackAnimation?.to,
+                    //   false
+                    // );
+                    swimmingAnimation?.start(
+                      true,
+                      1.0,
+                      swimmingAnimation.from,
+                      swimmingAnimation.to,
+                      false
+                    );
+                  } else if (inputMap["b"]) {
+                    // 삼바
+                    rumbaAnimation?.start(
+                      true,
+                      1.0,
+                      rumbaAnimation.from,
+                      rumbaAnimation.to,
+                      false
+                    );
+                  } else {
+                    // 직진, 우회전, 좌회전 (같은 애니메이션 사용)
+                    // walkAnimation?.start(
+                    //   true,
+                    //   1.0,
+                    //   walkAnimation.from,
+                    //   walkAnimation.to,
+                    //   false
+                    // );
+                  }
+                }
+              } else {
+                // 키 눌려있지 않은 경우
+                if (animating) {
+                  // 애니메이션 실행되고 있는지 여부 확인
+                  // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
+                  rumbaAnimation?.stop();
+                  swimmingAnimation?.stop();
+                  // walkAnimation?.stop();
+                  // walkBackAnimation?.stop();
+
+                  // 기본 애니메이션 실행
+                  idleAnimation?.start(
+                    true,
+                    1.0,
+                    idleAnimation.from,
+                    idleAnimation.to,
+                    false
+                  );
+
+                  animating = false;
+                }
+              }
+            });
+
+            playerViews[key] = _mesh;
+          });
+
+          // ANCHOR 내 캐릭터 컬러 변경 by.ellen
+          // const _mesh = MeshBuilder.CreateSphere("Sphere", {
+          //   diameter: 2,
+          // });
+          // _mesh.checkCollisions = true;
+          // if (key === room.sessionId) {
+          //   const material = new StandardMaterial("mat", scene);
+          //   material.alpha = 1;
+          //   material.diffuseColor = new Color3(1.0, 0.2, 0.7);
+          //   _mesh.material = material; // <--
+          // }
+          // _mesh.physicsImpostor = new PhysicsImpostor(
+          //   _mesh,
+          //   PhysicsImpostor.SphereImpostor,
+          //   { mass: 1 },
+          //   scene
+          // );
+
+          // playerViews[key] = _mesh;
+
+          playerViews[key].position = new Vector3(
+            player.position.x,
+            player.position.y + 15,
+            player.position.z - 5
+          );
+          player.position.onChange = () => {
+            playerViews[key].position.set(
+              player.position.x,
+              player.position.y + 1,
+              player.position.z
+            );
+          };
+          // Set camera to follow current player
+          if (key === room.sessionId) {
+            camera.setTarget(playerViews[key].position);
+          }
+          console.log(playerViews);
+        };
+
+        room.state.players.onRemove = function (player, key) {
+          scene.removeMesh(playerViews[key]);
+          delete playerViews[key];
+        };
+
+        room.onStateChange((state) => {
+          console.log("New room state:", state.toJSON());
+        });
       })
       .catch((error) => console.error(error));
 

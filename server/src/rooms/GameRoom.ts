@@ -32,8 +32,8 @@ export class GameRoom extends Room<StateHandler> {
     this.state.players.forEach((player, sessionId) => {
       // console.log(sessionId);
 
-      player.position.x += player.pressedKeys.x * 1;
-      player.position.z -= player.pressedKeys.y * 1;
+      player.position.x += player.pressedKeys.x * 0.1;
+      player.position.z -= player.pressedKeys.y * 0.1;
     });
   }
 
