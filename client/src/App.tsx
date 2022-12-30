@@ -3,6 +3,7 @@ import {
   AbstractMesh,
   ActionManager,
   Animation,
+  AnimationPropertiesOverride,
   ArcRotateCamera,
   CannonJSPlugin,
   Color3,
@@ -440,6 +441,14 @@ function App() {
     // 문 열림 여부
     let doorStatus = false;
 
+    wall1.isVisible = false;
+    wall2.isVisible = false;
+    wall3.isVisible = false;
+    wall4.isVisible = false;
+    wall5.isVisible = false;
+    wall6.isVisible = false;
+    door.isVisible = false;
+
     // NOTE 이벤트
     var inputMap: { [key: string]: boolean } = {};
     scene.actionManager = new ActionManager(scene);
@@ -458,94 +467,72 @@ function App() {
     const characterSpeedBack = 0.01;
     const characterRotationSpeed = 0.1;
 
-    // NOTE 캐릭터 렌더링
-    var keydown = false;
-    var animating = false;
-
     // TODO multi player
     client
       .joinOrCreate<StateHandler>("game") // server 쪽에서 GameServer 생성할 때의 이름과 동일하게 맞춰야 함
       .then((room) => {
         console.log(room, "===> ROOM");
-
         const playerViews: { [id: string]: AbstractMesh } = {};
-
-        // ANCHOR Keyboard listeners -> send 부분이 서버와 클라이언트 연결
-        const keyDownEvent = (e: KeyboardEvent) => {
-          keydown = true;
-          if (e.key === "s") {
-            keyboard.y = 1;
-          } else if (e.key === "w") {
-            keyboard.y = -1;
-          } else if (e.key === "a") {
-            keyboard.x = -1;
-          } else if (e.key === "d") {
-            keyboard.x = 1;
-          }
-          room.send("key", keyboard);
-        };
-        const keyUpEvent = (e: KeyboardEvent) => {
-          keydown = false;
-          if (e.key === "s") {
-            keyboard.y = 0;
-          } else if (e.key === "w") {
-            keyboard.y = 0;
-          } else if (e.key === "a") {
-            keyboard.x = 0;
-          } else if (e.key === "d") {
-            keyboard.x = 0;
-          }
-          room.send("key", keyboard);
-        };
-
-        window.addEventListener("keydown", keyDownEvent);
-        window.addEventListener("keyup", keyUpEvent);
 
         room.state.players.onAdd = async (player, key) => {
           console.log("ON ADD");
 
-          // TODO attach to bone
+          // NOTE attach to bone
           const hatMesh = await SceneLoader.ImportMeshAsync(
             "",
             "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
             "hat2.glb",
             scene
           );
+          hatMesh.meshes[0].scaling.scaleInPlace(0.5);
+          // hatMesh.meshes[0].rotation.z = Math.PI / 2;
 
-          await SceneLoader.ImportMeshAsync(
+          const trash = await SceneLoader.ImportMeshAsync(
             "",
             "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-            "MergedMouse.glb",
+            "trash.glb",
+            scene
+          );
+          trash.meshes[0].scaling.scaleInPlace(0.5);
+
+          // NOTE 캐릭터 렌더링
+          await SceneLoader.ImportMeshAsync(
+            "",
+            // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+            // "MergedMouse.glb",
+            "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
+            "dummy3.babylon",
             scene
           ).then((result) => {
             const _mesh = result.meshes[0];
-            const skeleton = result.meshes[1].skeleton;
+            // _mesh.rotation.y = Math.PI;
+            const skeleton = result.skeletons[0];
 
-            console.log("ON SUCCESS");
+            // skeleton.animationPropertiesOverride =
+            //   new AnimationPropertiesOverride();
+            // skeleton.animationPropertiesOverride.enableBlending = true;
+            // skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
+            // skeleton.animationPropertiesOverride.loopMode = 1;
+            console.log("ON SUCCESS", skeleton.bones);
 
-            if (skeleton) {
-              console.log(
-                skeleton?.bones.filter((b) => b.name.indexOf("Head") !== -1)[0],
-                "=====>>>>>"
-              );
-
-              hatMesh.meshes[0].attachToBone(
-                skeleton?.bones.filter((b) => b.name.indexOf("Head") !== -1)[0],
-                _mesh
-              );
-            }
+            hatMesh.meshes[0].attachToBone(
+              skeleton.bones[5].children[0],
+              _mesh
+            );
+            trash.meshes[0].attachToBone(skeleton.bones[12].children[1], _mesh);
 
             _mesh.scaling.scaleInPlace(1);
+            _mesh.setParent(null);
             _mesh.physicsImpostor = new PhysicsImpostor(
               _mesh,
-              PhysicsImpostor.SphereImpostor,
+              PhysicsImpostor.BoxImpostor,
               { mass: 0.5, restitution: 0.4 },
               scene
             );
             _mesh.checkCollisions = true;
 
             scene.registerBeforeRender(() => {
-              // console.log(door.intersectsMesh(characters));
+              var animating = false;
               doorStatus = door.intersectsMesh(_mesh);
 
               // 캐릭터 애니메이션
@@ -553,10 +540,20 @@ function App() {
               // const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
               // const idleAnimation = scene.getAnimationGroupByName("Idle");
               // const sambaAnimation = scene.getAnimationGroupByName("Samba");
-              const idleAnimation = scene.getAnimationGroupByName("Idle");
-              const rumbaAnimation = scene.getAnimationGroupByName("Rumba");
-              const swimmingAnimation =
-                scene.getAnimationGroupByName("Swimming");
+              // const rumbaAnimation = scene.getAnimationGroupByName("Rumba");
+              const idleAnimation = scene.getAnimationGroupByName("YBot_Idle");
+              const walkAnimation = scene.getAnimationGroupByName("YBot_walk");
+              var leftAnimation = scene.getAnimationGroupByName(
+                "YBot_LeftStrafeWalk"
+              );
+              var rightAnimation = scene.getAnimationGroupByName(
+                "YBot_RightStrafeWalk"
+              );
+
+              if (!idleAnimation) return;
+              if (!walkAnimation) return;
+              if (!leftAnimation) return;
+              if (!rightAnimation) return;
 
               // 애니메이션에 대한 정의
               if (keydown) {
@@ -574,30 +571,42 @@ function App() {
                     //   walkBackAnimation?.to,
                     //   false
                     // );
-                    swimmingAnimation?.start(
+                    walkAnimation.start(
                       true,
                       1.0,
-                      swimmingAnimation.from,
-                      swimmingAnimation.to,
+                      walkAnimation.from,
+                      walkAnimation.to,
                       false
                     );
-                  } else if (inputMap["b"]) {
+                  } else if (inputMap["d"]) {
                     // 삼바
-                    rumbaAnimation?.start(
+                    rightAnimation.start(
                       true,
                       1.0,
-                      rumbaAnimation.from,
-                      rumbaAnimation.to,
+                      rightAnimation.from,
+                      rightAnimation.to,
                       false
                     );
-                  } else {
+                    // scene.beginAnimation(
+                    //   _mesh,
+                    //   rightAnimation.from,
+                    //   rightAnimation.to,
+                    //   true
+                    // );
+                  } else if (inputMap["a"]) {
                     // 직진, 우회전, 좌회전 (같은 애니메이션 사용)
-                    // walkAnimation?.start(
-                    //   true,
-                    //   1.0,
-                    //   walkAnimation.from,
-                    //   walkAnimation.to,
-                    //   false
+                    leftAnimation.start(
+                      true,
+                      1.0,
+                      leftAnimation.from,
+                      leftAnimation.to,
+                      false
+                    );
+                    // scene.beginAnimation(
+                    //   _mesh,
+                    //   leftAnimation.from,
+                    //   leftAnimation.to,
+                    //   true
                     // );
                   }
                 }
@@ -606,13 +615,18 @@ function App() {
                 if (animating) {
                   // 애니메이션 실행되고 있는지 여부 확인
                   // 키 눌린 경우 실행되어야 하는 애니메이션 멈춤
-                  rumbaAnimation?.stop();
-                  swimmingAnimation?.stop();
-                  // walkAnimation?.stop();
-                  // walkBackAnimation?.stop();
+                  rightAnimation.stop();
+                  walkAnimation.stop();
+                  leftAnimation.stop();
 
                   // 기본 애니메이션 실행
-                  idleAnimation?.start(
+                  // scene.beginAnimation(
+                  //   _mesh,
+                  //   idleAnimation.from,
+                  //   idleAnimation.to,
+                  //   true
+                  // );
+                  idleAnimation.start(
                     true,
                     1.0,
                     idleAnimation.from,
@@ -627,6 +641,39 @@ function App() {
 
             playerViews[key] = _mesh;
           });
+
+          var keydown = false;
+
+          // ANCHOR Keyboard listeners -> send 부분이 서버와 클라이언트 연결
+          const keyDownEvent = (e: KeyboardEvent) => {
+            keydown = true;
+            if (e.key === "s") {
+              keyboard.y = 1;
+            } else if (e.key === "w") {
+              keyboard.y = -1;
+            } else if (e.key === "a") {
+              keyboard.x = -1;
+            } else if (e.key === "d") {
+              keyboard.x = 1;
+            }
+            room.send("key", keyboard);
+          };
+          const keyUpEvent = (e: KeyboardEvent) => {
+            keydown = false;
+            if (e.key === "s") {
+              keyboard.y = 0;
+            } else if (e.key === "w") {
+              keyboard.y = 0;
+            } else if (e.key === "a") {
+              keyboard.x = 0;
+            } else if (e.key === "d") {
+              keyboard.x = 0;
+            }
+            room.send("key", keyboard);
+          };
+
+          window.addEventListener("keydown", keyDownEvent);
+          window.addEventListener("keyup", keyUpEvent);
 
           // ANCHOR 내 캐릭터 컬러 변경 by.ellen
           // const _mesh = MeshBuilder.CreateSphere("Sphere", {
@@ -650,13 +697,13 @@ function App() {
 
           playerViews[key].position = new Vector3(
             player.position.x,
-            player.position.y + 15,
-            player.position.z - 5
+            player.position.y + 1,
+            player.position.z
           );
           player.position.onChange = () => {
             playerViews[key].position.set(
               player.position.x,
-              player.position.y + 1,
+              player.position.y,
               player.position.z
             );
           };
@@ -664,7 +711,7 @@ function App() {
           if (key === room.sessionId) {
             camera.setTarget(playerViews[key].position);
           }
-          console.log(playerViews);
+          // console.log(playerViews);
         };
 
         room.state.players.onRemove = function (player, key) {
