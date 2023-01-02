@@ -80,34 +80,6 @@ function App() {
 
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // NOTE 캔버스 엘리먼트 찾음
 
-  DefaultLoadingScreen.prototype.displayLoadingUI = () => {
-    // 로딩 UI 직접 작성
-    console.log("display loading ui works");
-
-    if (document.getElementById("loading")) {
-      document.getElementById("loading")!.style.display = "initial";
-      return;
-    }
-
-    const _loading = document.createElement("div");
-    _loading.id = "loading";
-    _loading.innerHTML = `
-      <p>SCENE IS CURRENTLY LOADING...</p>
-      <p id="loading-percentage">100</p>
-  `;
-
-    document.body.appendChild(_loading);
-  };
-  DefaultLoadingScreen.prototype.hideLoadingUI = () => {
-    // 로딩 완료 직접 작성
-    console.log("hide loading ui works");
-    if (document.getElementById("loading")) {
-      document.getElementById("loading")!.style.display = "none";
-    } else {
-      return;
-    }
-  };
-
   const createScene = function (scene: Scene, engine: Engine) {
     // NOTE loading 화면으로 먼저 scene 그리기
     engine.displayLoadingUI();
@@ -130,6 +102,7 @@ function App() {
     // camera.upperRadiusLimit = 10;
     // camera.wheelDeltaPercentage = 0.01;
 
+    // NOTE Skybox 생성
     // var hdrTexture = new CubeTexture(
     //   "https://raw.githubusercontent.com/BabylonJS/Assets/master/environments/environmentSpecular.dds",
     //   scene
@@ -360,7 +333,6 @@ function App() {
     camera.animations.push(rotate);
 
     // 문 열리는 애니메이션
-    // 회전의 중심은 항상 같게 둬야하는지? 바꿀 수 없는지..
     const sweep = new Animation(
       "sweep",
       "rotation.y",
@@ -415,10 +387,11 @@ function App() {
       { frame: 3 * frameRate, value: 0 },
     ]);
 
-    // 렌더링 되면 애니메이션 바로 시작
+    // ANCHOR 렌더링 되면 애니메이션 바로 시작
     // scene.beginAnimation(camera, 0, 15 * frameRate, false);
     // scene.beginAnimation(hinge, 0, 15 * frameRate, false);
 
+    // NOTE 집과 문에 물리엔진 적용
     [wall1, wall2, wall3, wall4, wall5, wall6].forEach((w) => {
       w.physicsImpostor = new PhysicsImpostor(
         w,
@@ -438,9 +411,28 @@ function App() {
       scene
     );
 
-    // 문 열림 여부
+    // NOTE 캐릭터 터치에 따른 문 열림 액션
     let doorStatus = false;
 
+    scene.registerBeforeRender(() => {
+      if (doorStatus) {
+        // scene.stopAllAnimations();
+        scene.beginAnimation(
+          door,
+          3 * frameRate,
+          10 * frameRate,
+          false,
+          undefined,
+          () => {
+            // on animate end -> 문 열린채로 고정
+            hinge.rotation.y = Math.PI / 2;
+            doorOpenSound(scene);
+          }
+        );
+      }
+    });
+
+    // ANCHOR 일시적으로 집 숨김처리
     wall1.isVisible = false;
     wall2.isVisible = false;
     wall3.isVisible = false;
@@ -463,11 +455,11 @@ function App() {
       })
     );
 
-    const characterSpeed = 0.03;
-    const characterSpeedBack = 0.01;
-    const characterRotationSpeed = 0.1;
+    // const characterSpeed = 0.03;
+    // const characterSpeedBack = 0.01;
+    // const characterRotationSpeed = 0.1;
 
-    // TODO multi player
+    // NOTE multi player
     client
       .joinOrCreate<StateHandler>("game") // server 쪽에서 GameServer 생성할 때의 이름과 동일하게 맞춰야 함
       .then((room) => {
@@ -508,18 +500,19 @@ function App() {
             // _mesh.rotation.y = Math.PI;
             const skeleton = result.skeletons[0];
 
-            // skeleton.animationPropertiesOverride =
-            //   new AnimationPropertiesOverride();
-            // skeleton.animationPropertiesOverride.enableBlending = true;
-            // skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
-            // skeleton.animationPropertiesOverride.loopMode = 1;
             console.log("ON SUCCESS", skeleton.bones);
 
-            hatMesh.meshes[0].attachToBone(
-              skeleton.bones[5].children[0],
-              _mesh
-            );
-            trash.meshes[0].attachToBone(skeleton.bones[12].children[1], _mesh);
+            if (key === room.sessionId) {
+              hatMesh.meshes[0].attachToBone(
+                skeleton.bones[5].children[0],
+                _mesh
+              );
+            } else {
+              trash.meshes[0].attachToBone(
+                skeleton.bones[5].children[0],
+                _mesh
+              );
+            }
 
             _mesh.scaling.scaleInPlace(1);
             _mesh.setParent(null);
@@ -535,7 +528,7 @@ function App() {
               var animating = false;
               doorStatus = door.intersectsMesh(_mesh);
 
-              // 캐릭터 애니메이션
+              // ANCHOR 캐릭터 애니메이션 각 캐릭터마다 animation group name 을 블렌더에서 어떻게 작업하는지 다르기때문에 확인 필요
               // const walkAnimation = scene.getAnimationGroupByName("Walking");
               // const walkBackAnimation = scene.getAnimationGroupByName("WalkingBack");
               // const idleAnimation = scene.getAnimationGroupByName("Idle");
@@ -550,6 +543,7 @@ function App() {
                 "YBot_RightStrafeWalk"
               );
 
+              // type error 방지
               if (!idleAnimation) return;
               if (!walkAnimation) return;
               if (!leftAnimation) return;
@@ -562,7 +556,7 @@ function App() {
                   // 애니메이션 실행되고 있는지 여부 확인
                   animating = true;
 
-                  if (inputMap["w"]) {
+                  if (inputMap["w"] || inputMap["ㅈ"]) {
                     // 직진
                     // walkBackAnimation?.start(
                     //   true,
@@ -578,7 +572,7 @@ function App() {
                       walkAnimation.to,
                       false
                     );
-                  } else if (inputMap["d"]) {
+                  } else if (inputMap["d"] || inputMap["ㅇ"]) {
                     // 삼바
                     rightAnimation.start(
                       true,
@@ -593,7 +587,7 @@ function App() {
                     //   rightAnimation.to,
                     //   true
                     // );
-                  } else if (inputMap["a"]) {
+                  } else if (inputMap["a"] || inputMap["ㅁ"]) {
                     // 직진, 우회전, 좌회전 (같은 애니메이션 사용)
                     leftAnimation.start(
                       true,
@@ -647,26 +641,26 @@ function App() {
           // ANCHOR Keyboard listeners -> send 부분이 서버와 클라이언트 연결
           const keyDownEvent = (e: KeyboardEvent) => {
             keydown = true;
-            if (e.key === "s") {
+            if (e.key === "s" || e.key === "ㄴ") {
               keyboard.y = 1;
-            } else if (e.key === "w") {
+            } else if (e.key === "w" || e.key === "ㅈ") {
               keyboard.y = -1;
-            } else if (e.key === "a") {
+            } else if (e.key === "a" || e.key === "ㅁ") {
               keyboard.x = -1;
-            } else if (e.key === "d") {
+            } else if (e.key === "d" || e.key === "ㅇ") {
               keyboard.x = 1;
             }
             room.send("key", keyboard);
           };
           const keyUpEvent = (e: KeyboardEvent) => {
             keydown = false;
-            if (e.key === "s") {
+            if (e.key === "s" || e.key === "ㄴ") {
               keyboard.y = 0;
-            } else if (e.key === "w") {
+            } else if (e.key === "w" || e.key === "ㅈ") {
               keyboard.y = 0;
-            } else if (e.key === "a") {
+            } else if (e.key === "a" || e.key === "ㅁ") {
               keyboard.x = 0;
-            } else if (e.key === "d") {
+            } else if (e.key === "d" || e.key === "ㅇ") {
               keyboard.x = 0;
             }
             room.send("key", keyboard);
@@ -736,24 +730,6 @@ function App() {
     instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
     advancedTexture.addControl(instructions);
 
-    scene.registerBeforeRender(() => {
-      if (doorStatus) {
-        // scene.stopAllAnimations();
-        scene.beginAnimation(
-          door,
-          3 * frameRate,
-          10 * frameRate,
-          false,
-          undefined,
-          () => {
-            // on animate end -> 문 열린채로 고정
-            hinge.rotation.y = Math.PI / 2;
-            doorOpenSound(scene);
-          }
-        );
-      }
-    });
-
     return scene;
   };
 
@@ -765,7 +741,7 @@ function App() {
   };
 
   // NOTE iframe / canvas pointer event
-  var listener = function (evt: any, scene: Scene, youtubeFocused: boolean) {
+  var listener = (evt: any, scene: Scene, youtubeFocused: boolean) => {
     let pick = scene.pick(Math.round(evt.offsetX), Math.round(evt.offsetY));
     if (!pick.pickedMesh) return;
     if (pick.pickedMesh.name === "css_plane") {
@@ -798,11 +774,11 @@ function App() {
       scene.render();
     });
 
-    // 브라우저나 캔버스의 리사이즈 이벤트를 적용함
+    // ANCHOR 브라우저나 캔버스의 리사이즈 이벤트를 적용함
     window.addEventListener("resize", function () {
       engine.resize();
     });
-    // ifram 영역과 캔버스 영역 구분
+    // ANCHOR ifram 영역과 캔버스 영역 구분
     window.addEventListener("pointermove", (event) =>
       listener(event, scene, youtubeFocused)
     );
@@ -827,9 +803,6 @@ function App() {
       window.removeEventListener("pointerup", (event) =>
         listener(event, scene, youtubeFocused)
       );
-
-      // window.removeEventListener("keydown", keyDownEvent);
-      // window.removeEventListener("keyup", keyUpEvent);
     };
   }, []);
 
@@ -838,12 +811,12 @@ function App() {
       <Modal open={isVisible} onCancel={() => setIsVisible(false)}>
         <div>
           <iframe
+            title="modal-iframe"
             width={1280}
             height={960}
             src="https://youtube.com/embed/VwANX7CvF8I"
             id="modal-iframe"
           />
-          <h1 style={{ color: "white" }}>TEST</h1>
         </div>
       </Modal>
     </div>
