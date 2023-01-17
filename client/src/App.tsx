@@ -218,12 +218,12 @@ function App() {
     SceneLoader.ImportMesh(
       "",
       "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      "customground.glb",
+      "emirates_stadium.glb",
       scene,
       (meshes) => {
         // on success
         const mesh = meshes[0];
-        mesh.scaling = new Vector3(15, 15, 15);
+        // mesh.scaling = new Vector3(15, 15, 15);
         mesh.checkCollisions = true;
 
         mesh.getChildMeshes().forEach((m) => {
@@ -269,7 +269,7 @@ function App() {
         console.log(percentage);
 
         document.getElementById(
-          //FIXME
+          // FIXME
           "loading"
         )!.textContent = `${percentage.toFixed()}%`;
       }
@@ -433,13 +433,13 @@ function App() {
     });
 
     // ANCHOR 일시적으로 집 숨김처리
-    wall1.isVisible = false;
-    wall2.isVisible = false;
-    wall3.isVisible = false;
-    wall4.isVisible = false;
-    wall5.isVisible = false;
-    wall6.isVisible = false;
-    door.isVisible = false;
+    // wall1.isVisible = false;
+    // wall2.isVisible = false;
+    // wall3.isVisible = false;
+    // wall4.isVisible = false;
+    // wall5.isVisible = false;
+    // wall6.isVisible = false;
+    // door.isVisible = false;
 
     // NOTE 이벤트
     var inputMap: { [key: string]: boolean } = {};
