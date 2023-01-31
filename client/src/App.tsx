@@ -218,7 +218,7 @@ function App() {
     SceneLoader.ImportMesh(
       "",
       "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-      "customground.glb",
+      "emirates+stadium1.obj", //skp 파일 오류..
       scene,
       (meshes) => {
         // on success
@@ -470,22 +470,22 @@ function App() {
           console.log("ON ADD");
 
           // NOTE attach to bone
-          const hatMesh = await SceneLoader.ImportMeshAsync(
-            "",
-            "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-            "hat2.glb",
-            scene
-          );
-          hatMesh.meshes[0].scaling.scaleInPlace(0.5);
+          // const hatMesh = await SceneLoader.ImportMeshAsync(
+          //   "",
+          //   "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+          //   "hat2.glb",
+          //   scene
+          // );
+          // hatMesh.meshes[0].scaling.scaleInPlace(0.5);
           // hatMesh.meshes[0].rotation.z = Math.PI / 2;
 
-          const trash = await SceneLoader.ImportMeshAsync(
-            "",
-            "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
-            "trash.glb",
-            scene
-          );
-          trash.meshes[0].scaling.scaleInPlace(0.5);
+          // const trash = await SceneLoader.ImportMeshAsync(
+          //   "",
+          //   "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
+          //   "trash.glb",
+          //   scene
+          // );
+          // trash.meshes[0].scaling.scaleInPlace(0.5);
 
           // NOTE 캐릭터 렌더링
           await SceneLoader.ImportMeshAsync(
@@ -493,7 +493,7 @@ function App() {
             // "https://raw.githubusercontent.com/hyeoz/babylonjs-assets/main/",
             // "MergedMouse.glb",
             "https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/",
-            "dummy3.babylon",
+            "soccer_ball.fbx",
             scene
           ).then((result) => {
             const _mesh = result.meshes[0];
@@ -502,19 +502,19 @@ function App() {
 
             console.log("ON SUCCESS", skeleton.bones);
 
-            if (key === room.sessionId) {
-              hatMesh.meshes[0].attachToBone(
-                skeleton.bones[5].children[0],
-                _mesh
-              );
-            } else {
-              trash.meshes[0].attachToBone(
-                skeleton.bones[5].children[0],
-                _mesh
-              );
-            }
+            // if (key === room.sessionId) {
+            //   hatMesh.meshes[0].attachToBone(
+            //     skeleton.bones[5].children[0],
+            //     _mesh
+            //   );
+            // } else {
+            //   trash.meshes[0].attachToBone(
+            //     skeleton.bones[5].children[0],
+            //     _mesh
+            //   );
+            // }
 
-            _mesh.scaling.scaleInPlace(1);
+            _mesh.scaling.scaleInPlace(10);
             _mesh.setParent(null);
             _mesh.physicsImpostor = new PhysicsImpostor(
               _mesh,
